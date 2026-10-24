@@ -1,0 +1,285 @@
+import User from "../models/User.js";
+import Otp from "../models/Otp.js";
+import AppError from "../utils/AppError.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import sendEmail from "../utils/sendEmail.js";
+import { generateOtp, hashOtp } from "../utils/otp.js";
+import { signToken, sendTokenCookie } from "../utils/token.js";
+ 
+export const register = asyncHandler(async (req, res) => {
+  const { name, email, phone, password } = req.body;
+
+  if (!name || !email || !password) {
+    throw new AppError(
+      "Name, email, and password are required.",
+      400
+    );
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existingUser = await User.findOne({
+    email: normalizedEmail,
+  });
+
+  if (existingUser?.isVerified) {
+    throw new AppError(
+      "An account with this email already exists.",
+      409
+    );
+  }
+
+  if (password.length < 8) {
+    throw new AppError(
+      "Password must be at least 8 characters.",
+      400
+    );
+  }
+
+  const otp = generateOtp();
+  const otpHash = hashOtp(otp);
+
+  await Otp.deleteMany({
+    email: normalizedEmail,
+    purpose: "register",
+  });
+
+  await Otp.create({
+    email: normalizedEmail,
+    otpHash,
+    purpose: "register",
+    expiresAt: new Date(
+      Date.now() +
+        Number(process.env.OTP_EXPIRY_MINUTES || 5) * 60 * 1000
+    ),
+  });
+
+  try {
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "HealthyBite email verification",
+      html: `<p>Your HealthyBite verification code is <strong>${otp}</strong>.</p>
+             <p>This code expires in ${Number(process.env.OTP_EXPIRY_MINUTES || 5)} minutes.</p>`,
+    });
+  } catch (error) {
+    await Otp.deleteMany({
+      email: normalizedEmail,
+      purpose: "register",
+    });
+    throw error;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Verification code sent to your email.",
+  });
+});
+
+
+export const verifyRegistrationOtp = asyncHandler(
+  async (req, res) => {
+    const { email, otp, name, phone, password } = req.body;
+
+    if (!email || !otp || !name || !password) {
+      throw new AppError(
+        "Email, OTP, name, and password are required.",
+        400
+      );
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const otpRecord = await Otp.findOne({
+      email: normalizedEmail,
+      purpose: "register",
+    }).sort({ createdAt: -1 });
+
+    if (!otpRecord || otpRecord.expiresAt <= new Date()) {
+      throw new AppError(
+        "OTP is invalid or expired. Please request a new one.",
+        400
+      );
+    }
+
+    if (otpRecord.attempts >= 5) {
+      await Otp.deleteOne({ _id: otpRecord._id });
+      throw new AppError(
+        "Too many attempts. Please request a new OTP.",
+        429
+      );
+    }
+
+     if (hashOtp(otp) !== otpRecord.otpHash) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+
+      throw new AppError("Incorrect OTP.", 400);
+    }
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    if (existingUser?.isVerified) {
+      await Otp.deleteOne({ _id: otpRecord._id });
+      throw new AppError(
+        "An account with this email already exists.",
+        409
+      );
+    }
+
+    const user = existingUser || new User({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone,
+      password,
+    });
+
+    user.name = name.trim();
+    user.phone = phone;
+    user.password = password;
+    user.isVerified = true;
+
+    await user.save();
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    const token = signToken(user._id.toString());
+    sendTokenCookie(res, token);
+
+    res.status(201).json({
+      success: true,
+      message: "Your HealthyBite account has been created.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  }
+);
+
+export const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new AppError("Email and password are required.", 400);
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await User.findOne({
+    email: normalizedEmail,
+  }).select("+password");
+
+  if (!user || !(await user.comparePassword(password))) {
+    throw new AppError("Invalid email or password.", 401);
+  }
+
+  if (!user.isVerified) {
+    throw new AppError("Please verify your email first.", 403);
+  }
+
+  if (user.isBlocked) {
+    throw new AppError("Your account has been blocked.", 403);
+  }
+
+  const token = signToken(user._id.toString());
+  sendTokenCookie(res, token);
+
+  res.status(200).json({
+    success: true,
+    message: "Login successful.",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+});
+
+export const logout = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully.",
+  });
+};
+
+export const getMe = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      phone: req.user.phone,
+      role: req.user.role,
+      isVerified: req.user.isVerified,
+      profileImage: req.user.profileImage,
+    },
+  });
+});
+const deleteOldProfilePhoto = async (photoPath) => {
+  // Delete only files inside our profile uploads folder.
+  if (!photoPath?.startsWith("/uploads/profile/")) return;
+
+  const filename = path.basename(photoPath);
+  const filePath = path.join(
+    process.cwd(),
+    "uploads",
+    "profile",
+    filename
+  );
+
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.error("Could not delete old profile photo:", error);
+    }
+  }
+};
+
+export const uploadPhoto = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new AppError("Please choose a profile photo.", 400);
+  }
+
+  const oldPhoto = req.user.profileImage;
+
+  req.user.profileImage = `/uploads/profile/${req.file.filename}`;
+  await req.user.save();
+
+  await deleteOldProfilePhoto(oldPhoto);
+
+  res.status(200).json({
+    success: true,
+    message: "Profile photo updated successfully.",
+    profileImage: req.user.profileImage,
+  });
+});
+
+export const removePhoto = asyncHandler(async (req, res) => {
+  const oldPhoto = req.user.profileImage;
+
+  req.user.profileImage = "";
+  await req.user.save();
+
+  await deleteOldProfilePhoto(oldPhoto);
+
+  res.status(200).json({
+    success: true,
+    message: "Profile photo removed successfully.",
+    profileImage: "",
+  });
+});
