@@ -78,6 +78,94 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 
+export const resendRegistrationOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Email is required.", 400);
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existingUser = await User.findOne({
+    email: normalizedEmail,
+    isVerified: true,
+  });
+
+  if (existingUser) {
+    throw new AppError(
+      "An account with this email already exists.",
+      409
+    );
+  }
+
+  const previousOtp = await Otp.findOne({
+    email: normalizedEmail,
+    purpose: "register",
+  }).sort({ createdAt: -1 });
+
+  if (!previousOtp) {
+    throw new AppError(
+      "No registration OTP found. Please register first.",
+      400
+    );
+  }
+
+  const resendCooldown = Number(
+    process.env.OTP_RESEND_SECONDS || 30
+  );
+
+  const secondsSinceLastOtp =
+    (Date.now() - previousOtp.createdAt.getTime()) / 1000;
+
+  if (secondsSinceLastOtp < resendCooldown) {
+    const waitSeconds = Math.ceil(
+      resendCooldown - secondsSinceLastOtp
+    );
+
+    throw new AppError(
+      `Please wait ${waitSeconds} seconds before requesting another OTP.`,
+      429
+    );
+  }
+
+  const otp = generateOtp();
+  const otpHash = hashOtp(otp);
+
+  await Otp.deleteMany({
+    email: normalizedEmail,
+    purpose: "register",
+  });
+
+  const newOtp = await Otp.create({
+    email: normalizedEmail,
+    otpHash,
+    purpose: "register",
+    expiresAt: new Date(
+      Date.now() +
+        Number(process.env.OTP_EXPIRY_MINUTES || 5) * 60 * 1000
+    ),
+  });
+
+  try {
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Your new HealthyBite verification code",
+      html: `<p>Your new HealthyBite verification code is <strong>${otp}</strong>.</p>
+             <p>This code expires in ${Number(process.env.OTP_EXPIRY_MINUTES || 5)} minutes.</p>`,
+    });
+  } catch (error) {
+    await Otp.deleteOne({ _id: newOtp._id });
+    throw error;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "A new verification code has been sent to your email.",
+  });
+});
+
+
 export const verifyRegistrationOtp = asyncHandler(
   async (req, res) => {
     const { email, otp, name, phone, password } = req.body;
@@ -103,20 +191,33 @@ export const verifyRegistrationOtp = asyncHandler(
       );
     }
 
-    if (otpRecord.attempts >= 5) {
-      await Otp.deleteOne({ _id: otpRecord._id });
-      throw new AppError(
-        "Too many attempts. Please request a new OTP.",
-        429
-      );
-    }
+    
+if (otpRecord.attempts >= 5) {
+  await Otp.deleteOne({ _id: otpRecord._id });
 
-     if (hashOtp(otp) !== otpRecord.otpHash) {
-      otpRecord.attempts += 1;
-      await otpRecord.save();
+  throw new AppError(
+    "Too many attempts. Please request a new OTP.",
+    429
+  );
+}
 
-      throw new AppError("Incorrect OTP.", 400);
-    }
+if (hashOtp(otp) !== otpRecord.otpHash) {
+  otpRecord.attempts += 1;
+
+  if (otpRecord.attempts >= 5) {
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    throw new AppError(
+      "Too many attempts. Please request a new OTP.",
+      429
+    );
+  }
+
+  await otpRecord.save();
+
+  throw new AppError("Incorrect OTP.", 400);
+}
+
 
     const existingUser = await User.findOne({
       email: normalizedEmail,
