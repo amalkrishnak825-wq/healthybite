@@ -7,6 +7,14 @@ const addressSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
+    },
+
+    type: {
+      type: String,
+      enum: ["Home", "Work", "Other"],
+      default: "Home",
+      required: true,
     },
 
     fullName: {
@@ -21,10 +29,22 @@ const addressSchema = new mongoose.Schema(
       trim: true,
     },
 
-    addressLine: {
+    houseNo: {
       type: String,
       required: true,
       trim: true,
+    },
+
+    street: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    landmark: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     city: {

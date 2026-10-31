@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import path from "node:path";
 import profileRoutes from "./routes/profileRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import addressRoutes from "./routes/addressRoutes.js";
+import catalogRoutes from "./routes/catalogRoutes.js";
 
 
 const app = express();
@@ -46,6 +48,8 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api", catalogRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

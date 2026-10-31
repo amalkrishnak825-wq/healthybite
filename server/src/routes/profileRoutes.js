@@ -5,8 +5,12 @@ import {
   updateProfile,
   uploadPhoto,
   removePhoto,
+  changePassword,
+  requestEmailChange,
+  verifyEmailChange,
 } from "../controllers/profileController.js";
 import { uploadProfileImage } from "../middleware/upload.js";
+import { otpLimiter } from "../middleware/rateLimiters.js";
 
 const router = express.Router();
 
@@ -17,5 +21,11 @@ router.patch("/me", protect, updateProfile);
 router.post("/photo", protect, uploadProfileImage, uploadPhoto);
 
 router.delete("/photo", protect, removePhoto);
+
+router.patch("/change-password", protect, changePassword);
+
+router.post("/change-email/request", protect, otpLimiter, requestEmailChange);
+
+router.post("/change-email/verify", protect, otpLimiter, verifyEmailChange);
 
 export default router;

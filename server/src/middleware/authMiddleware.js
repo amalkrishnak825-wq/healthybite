@@ -4,14 +4,18 @@ import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-const protect = asyncHandler(async (req, res, next) => {
-  const token = req.cookies?.token;
-
+const authenticate = async (token) => {
   if (!token) {
     throw new AppError("Please log in to access this resource.", 401);
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    throw new AppError("Session expired. Please log in again.", 401);
+  }
 
   const user = await User.findById(decoded.id);
 
@@ -23,7 +27,37 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new AppError("Your account has been blocked.", 403);
   }
 
-  req.user = user;
+  if (
+    user.passwordChangedAt &&
+    decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
+  ) {
+    throw new AppError("Password was changed. Please log in again.", 401);
+  }
+
+  return user;
+};
+
+
+const protect = asyncHandler(async (req, res, next) => {
+  let token = req.cookies?.token;
+
+  if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  req.user = await authenticate(token);
+  next();
+});
+
+
+export const protectAdmin = asyncHandler(async (req, res, next) => {
+  const user = await authenticate(req.cookies?.adminToken);
+
+  if (user.role !== "admin") {
+    throw new AppError("Admin access required.", 403);
+  }
+
+  req.admin = user;
   next();
 });
 

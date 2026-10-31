@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,9 +23,17 @@ const userSchema = new mongoose.Schema(
     },
 
     password: {
-      type: String,
-      required: true,
-      select: false,
+  type: String,
+  required: function () {
+    return !this.googleId;
+  },
+  select: false,
+    },
+
+    googleId: {
+  type: String,
+  sparse: true,
+  unique: true,
     },
 
     role: {
@@ -48,6 +56,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    passwordChangedAt: {
+      type: Date,
+    },
+    
   },
   { timestamps: true }
 );
@@ -59,6 +72,9 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (typeof candidatePassword !== "string" || typeof this.password !== "string" || !this.password) {
+    return false;
+  }
   return bcrypt.compare(candidatePassword, this.password);
 };
 
