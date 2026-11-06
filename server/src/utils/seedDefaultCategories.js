@@ -7,9 +7,16 @@ const defaults = [
 ];
 
 export default async function seedDefaultCategories() {
-  await Promise.all(defaults.map(({ name, slug }) => Category.updateOne(
-    { slug },
-    { $set: { name, isDeleted: false }, $setOnInsert: { slug, description: "" } },
-    { upsert: true },
-  )));
+  await Promise.all(
+    defaults.map(({ name, slug }) =>
+      Category.updateOne(
+        { slug },
+        {
+          $set: { name, isDeleted: false },
+          $setOnInsert: { slug, description: "" },
+        },
+        { upsert: true },
+      ),
+    ),
+  );
 }

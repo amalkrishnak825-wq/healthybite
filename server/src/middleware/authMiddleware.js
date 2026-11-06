@@ -1,4 +1,3 @@
-
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
@@ -37,7 +36,6 @@ const authenticate = async (token) => {
   return user;
 };
 
-
 const protect = asyncHandler(async (req, res, next) => {
   let token = req.cookies?.token;
 
@@ -48,7 +46,6 @@ const protect = asyncHandler(async (req, res, next) => {
   req.user = await authenticate(token);
   next();
 });
-
 
 export const protectAdmin = asyncHandler(async (req, res, next) => {
   const user = await authenticate(req.cookies?.adminToken);

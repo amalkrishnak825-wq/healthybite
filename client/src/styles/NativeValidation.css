@@ -1,6 +1,18 @@
 input.field-validation-hint,
 textarea.field-validation-hint,
-select.field-validation-hint{border-color:#c33!important;box-shadow:0 0 0 2px #c3312918}
+select.field-validation-hint {
+  border-color: #c33 !important;
+  box-shadow: 0 0 0 2px #c3312918;
+}
 input.field-validation-hint::placeholder,
-textarea.field-validation-hint::placeholder{color:#b42318!important;opacity:1}
-.native-validation-message{display:block;margin-top:5px;color:#b42318;font-size:12px;line-height:1.4}
+textarea.field-validation-hint::placeholder {
+  color: #b42318 !important;
+  opacity: 1;
+}
+.native-validation-message {
+  display: block;
+  margin-top: 5px;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.4;
+}

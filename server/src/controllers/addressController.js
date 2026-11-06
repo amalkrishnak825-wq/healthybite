@@ -1,4 +1,3 @@
-
 import Address from "../models/Address.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -28,7 +27,15 @@ const addressData = (body) => {
 };
 
 const validateAddress = (data, partial = false) => {
-  const required = ["fullName", "phone", "houseNo", "street", "city", "state", "pincode"];
+  const required = [
+    "fullName",
+    "phone",
+    "houseNo",
+    "street",
+    "city",
+    "state",
+    "pincode",
+  ];
   if (!partial) {
     for (const field of required) {
       if (typeof data[field] !== "string" || !data[field].trim()) {
@@ -36,9 +43,18 @@ const validateAddress = (data, partial = false) => {
       }
     }
   }
-  if (data.phone !== undefined && !/^[6-9]\d{9}$/.test(String(data.phone).trim())) throw new AppError("Enter a valid 10-digit Indian mobile number.", 400);
-  if (data.pincode !== undefined && !/^\d{6}$/.test(String(data.pincode).trim())) throw new AppError("Enter a valid 6-digit PIN code.", 400);
-  if (data.type !== undefined && !["Home", "Work", "Other"].includes(data.type)) throw new AppError("Address type must be Home, Work, or Other.", 400);
+  if (
+    data.phone !== undefined &&
+    !/^[6-9]\d{9}$/.test(String(data.phone).trim())
+  )
+    throw new AppError("Enter a valid 10-digit Indian mobile number.", 400);
+  if (
+    data.pincode !== undefined &&
+    !/^\d{6}$/.test(String(data.pincode).trim())
+  )
+    throw new AppError("Enter a valid 6-digit PIN code.", 400);
+  if (data.type !== undefined && !["Home", "Work", "Other"].includes(data.type))
+    throw new AppError("Address type must be Home, Work, or Other.", 400);
 };
 
 export const getAddresses = asyncHandler(async (req, res) => {
@@ -70,7 +86,7 @@ export const createAddress = asyncHandler(async (req, res) => {
   if (makeDefault) {
     await Address.updateMany(
       { user: req.user._id, isDefault: true },
-      { $set: { isDefault: false } }
+      { $set: { isDefault: false } },
     );
   }
 
@@ -103,14 +119,11 @@ export const updateAddress = asyncHandler(async (req, res) => {
   if (req.body.isDefault === true || req.body.isDefault === "true") {
     await Address.updateMany(
       { user: req.user._id, isDefault: true },
-      { $set: { isDefault: false } }
+      { $set: { isDefault: false } },
     );
 
     address.isDefault = true;
-  } else if (
-    req.body.isDefault === false ||
-    req.body.isDefault === "false"
-  ) {
+  } else if (req.body.isDefault === false || req.body.isDefault === "false") {
     address.isDefault = false;
   }
 
@@ -183,7 +196,7 @@ export const setDefaultAddress = asyncHandler(async (req, res) => {
 
   await Address.updateMany(
     { user: req.user._id, isDefault: true },
-    { $set: { isDefault: false } }
+    { $set: { isDefault: false } },
   );
 
   address.isDefault = true;

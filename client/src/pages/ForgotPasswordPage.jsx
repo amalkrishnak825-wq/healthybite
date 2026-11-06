@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
@@ -27,7 +26,11 @@ export default function ForgotPasswordPage() {
       });
 
       pending.setReset(email.trim());
-      navigate("/forgot-password/verify", { state: { notice: "If the account exists, a verification code will be sent." } });
+      navigate("/forgot-password/verify", {
+        state: {
+          notice: "If the account exists, a verification code will be sent.",
+        },
+      });
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     } finally {
@@ -38,32 +41,43 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout className="auth-forgot-page">
       <div className="auth-card">
-        <div className="auth-compact-brand"><Leaf size={19}/>HealthyBite</div>
+        <div className="auth-compact-brand">
+          <Leaf size={19} />
+          HealthyBite
+        </div>
         <h1>Forgot Password?</h1>
         <p>
-          Enter the email address associated with your account.
-          We'll help you reset your password.
+          Enter the email address associated with your account. We'll help you
+          reset your password.
         </p>
 
         <form onSubmit={handleSubmit}>
-          {errorMessage && <div className="auth-form-error" role="alert"><CircleAlert size={17}/><span>{errorMessage}</span></div>}
+          {errorMessage && (
+            <div className="auth-form-error" role="alert">
+              <CircleAlert size={17} />
+              <span>{errorMessage}</span>
+            </div>
+          )}
           <AuthField
             label="Email address"
             name="email"
             type="email"
             value={email}
-            onChange={(event) => { setEmail(event.target.value); setErrorMessage(""); }}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setErrorMessage("");
+            }}
             placeholder="you@example.com"
             autoComplete="email"
           />
 
-          <AuthButton loading={loading}>
-            Reset Password
-          </AuthButton>
+          <AuthButton loading={loading}>Reset Password</AuthButton>
         </form>
 
         <p className="auth-switch">
-          <Link to="/login"><ArrowLeft size={14}/> Back to Sign In</Link>
+          <Link to="/login">
+            <ArrowLeft size={14} /> Back to Sign In
+          </Link>
         </p>
       </div>
     </AuthLayout>

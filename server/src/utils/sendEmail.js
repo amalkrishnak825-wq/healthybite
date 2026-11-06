@@ -1,4 +1,3 @@
-
 import nodemailer from "nodemailer";
 
 console.log("SMTP HOST:", process.env.SMTP_HOST);

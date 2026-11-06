@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "migrate:product-images": "node scripts/migrateProductImagesToCloudinary.js",
+    "migrate:profile-photos": "node scripts/migrateProfilePhotosToCloudinary.js",
     "create-admin": "node scripts/createAdmin.js",
     "update-admin-credentials": "node scripts/updateAdminCredentials.js"
   },
@@ -16,6 +18,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.8",

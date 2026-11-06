@@ -1,4 +1,3 @@
-
 import { GoogleLogin } from "@react-oauth/google";
 import { useState } from "react";
 import { CircleAlert } from "lucide-react";
@@ -27,12 +26,22 @@ export default function GoogleButton() {
   }
 
   return (
-    <div className="google-login-wrap"><GoogleLogin
-      onSuccess={handleSuccess}
-      onError={() => setErrorMessage("Google sign-in failed. Please try again.")}
-      text="continue_with"
-      shape="rectangular"
-      width="320"
-    />{errorMessage && <div className="auth-form-error" role="alert"><CircleAlert size={17}/><span>{errorMessage}</span></div>}</div>
+    <div className="google-login-wrap">
+      <GoogleLogin
+        onSuccess={handleSuccess}
+        onError={() =>
+          setErrorMessage("Google sign-in failed. Please try again.")
+        }
+        text="continue_with"
+        shape="rectangular"
+        width="320"
+      />
+      {errorMessage && (
+        <div className="auth-form-error" role="alert">
+          <CircleAlert size={17} />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+    </div>
   );
 }

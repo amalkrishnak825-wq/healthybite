@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Leaf } from "lucide-react";
 
@@ -8,7 +7,9 @@ export default function Footer() {
       <div className="footer-top">
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
-            <span className="footer-logo-icon"><Leaf size={17}/></span>
+            <span className="footer-logo-icon">
+              <Leaf size={17} />
+            </span>
             HealthyBite
           </Link>
 
@@ -40,8 +41,8 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <span>
-          © {new Date().getFullYear()} HealthyBite Technologies Pvt. Ltd.
-          All rights reserved.
+          © {new Date().getFullYear()} HealthyBite Technologies Pvt. Ltd. All
+          rights reserved.
         </span>
         <span>♡ Pure Organic Ingredients</span>
       </div>

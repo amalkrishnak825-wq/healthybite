@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import protect from "../middleware/authMiddleware.js";
 import {
@@ -13,13 +12,9 @@ const router = Router();
 
 router.use(protect);
 
-router.route("/")
-  .get(getAddresses)
-  .post(createAddress);
+router.route("/").get(getAddresses).post(createAddress);
 
 router.patch("/:id/default", setDefaultAddress);
-router.route("/:id")
-  .patch(updateAddress)
-  .delete(deleteAddress);
+router.route("/:id").patch(updateAddress).delete(deleteAddress);
 
 export default router;

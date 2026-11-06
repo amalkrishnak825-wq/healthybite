@@ -1,22 +1,25 @@
-
 import fs from "node:fs/promises";
 import path from "node:path";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import User from "../models/User.js";
 import { issueOtp, checkOtp } from "../utils/otp.js";
+import {
+  deleteCloudinaryImages,
+  uploadProfilePhoto,
+} from "../config/cloudinary.js";
 import validator from "validator";
 
 const deleteOldProfilePhoto = async (photoPath) => {
-  if (!photoPath?.startsWith("/uploads/profile/")) return;
+  if (photoPath?.publicId) {
+    await deleteCloudinaryImages([{ publicId: photoPath.publicId }]);
+    return;
+  }
 
-  const filename = path.basename(photoPath);
-  const filePath = path.join(
-    process.cwd(),
-    "uploads",
-    "profile",
-    filename
-  );
+  if (!photoPath?.url?.startsWith("/uploads/profile/")) return;
+
+  const filename = path.basename(photoPath.url);
+  const filePath = path.join(process.cwd(), "uploads", "profile", filename);
 
   try {
     await fs.unlink(filePath);
@@ -69,16 +72,24 @@ export const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
-
 export const uploadPhoto = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new AppError("Please choose a profile photo.", 400);
   }
 
-  const oldPhoto = req.user.profileImage;
-
-  req.user.profileImage = `/uploads/profile/${req.file.filename}`;
-  await req.user.save();
+  const oldPhoto = {
+    url: req.user.profileImage,
+    publicId: req.user.profileImagePublicId,
+  };
+  const uploadedPhoto = await uploadProfilePhoto(req.file);
+  req.user.profileImage = uploadedPhoto.url;
+  req.user.profileImagePublicId = uploadedPhoto.publicId;
+  try {
+    await req.user.save();
+  } catch (error) {
+    await deleteCloudinaryImages([uploadedPhoto]);
+    throw error;
+  }
 
   await deleteOldProfilePhoto(oldPhoto);
 
@@ -90,9 +101,12 @@ export const uploadPhoto = asyncHandler(async (req, res) => {
 });
 
 export const removePhoto = asyncHandler(async (req, res) => {
-  const oldPhoto = req.user.profileImage;
+  const oldPhoto = {
+    url: req.user.profileImage,
+    publicId: req.user.profileImagePublicId,
+  };
 
-  if (!oldPhoto) {
+  if (!oldPhoto.url) {
     return res.status(200).json({
       success: true,
       message: "No profile photo to remove.",
@@ -101,6 +115,7 @@ export const removePhoto = asyncHandler(async (req, res) => {
   }
 
   req.user.profileImage = "";
+  req.user.profileImagePublicId = "";
   await req.user.save();
 
   await deleteOldProfilePhoto(oldPhoto);
@@ -111,7 +126,6 @@ export const removePhoto = asyncHandler(async (req, res) => {
     profileImage: "",
   });
 });
-
 
 export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -133,7 +147,10 @@ export const changePassword = asyncHandler(async (req, res) => {
   }
 
   if (currentPassword === newPassword) {
-    throw new AppError("New password must differ from the current password.", 400);
+    throw new AppError(
+      "New password must differ from the current password.",
+      400,
+    );
   }
 
   const user = await User.findById(req.user._id).select("+password");
@@ -165,7 +182,6 @@ export const changePassword = asyncHandler(async (req, res) => {
   });
 });
 
-
 export const requestEmailChange = asyncHandler(async (req, res) => {
   const { newEmail } = req.body;
 
@@ -176,7 +192,10 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
   const normalizedEmail = newEmail.trim().toLowerCase();
 
   if (normalizedEmail === req.user.email.toLowerCase()) {
-    throw new AppError("Your new email must differ from your current email.", 400);
+    throw new AppError(
+      "Your new email must differ from your current email.",
+      400,
+    );
   }
 
   const existingUser = await User.findOne({ email: normalizedEmail });

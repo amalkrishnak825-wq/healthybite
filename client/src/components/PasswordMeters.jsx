@@ -1,4 +1,3 @@
-
 export function passwordChecks(password = "") {
   return {
     length: password.length >= 8,
@@ -37,10 +36,7 @@ export default function PasswordMeters({ password = "" }) {
     <div className="password-meter">
       <div className="password-meter-bars">
         {[1, 2, 3, 4].map((level) => (
-          <span
-            key={level}
-            className={score >= level ? "meter-filled" : ""}
-          />
+          <span key={level} className={score >= level ? "meter-filled" : ""} />
         ))}
       </div>
 

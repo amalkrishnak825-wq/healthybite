@@ -23,17 +23,17 @@ const userSchema = new mongoose.Schema(
     },
 
     password: {
-  type: String,
-  required: function () {
-    return !this.googleId;
-  },
-  select: false,
+      type: String,
+      required: function () {
+        return !this.googleId;
+      },
+      select: false,
     },
 
     googleId: {
-  type: String,
-  sparse: true,
-  unique: true,
+      type: String,
+      sparse: true,
+      unique: true,
     },
 
     role: {
@@ -57,12 +57,16 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    profileImagePublicId: {
+      type: String,
+      default: "",
+    },
+
     passwordChangedAt: {
       type: Date,
     },
-    
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.pre("save", async function () {
@@ -72,7 +76,11 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  if (typeof candidatePassword !== "string" || typeof this.password !== "string" || !this.password) {
+  if (
+    typeof candidatePassword !== "string" ||
+    typeof this.password !== "string" ||
+    !this.password
+  ) {
     return false;
   }
   return bcrypt.compare(candidatePassword, this.password);

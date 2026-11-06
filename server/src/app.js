@@ -10,7 +10,6 @@ import authRoutes from "./routes/authRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js";
 import catalogRoutes from "./routes/catalogRoutes.js";
 
-
 const app = express();
 
 app.use(
@@ -18,24 +17,21 @@ app.use(
     crossOriginResourcePolicy: {
       policy: "cross-origin",
     },
-  })
+  }),
 );
 
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
 
 app.use(cookieParser());
 
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "uploads"))
-);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(morgan("dev"));
 

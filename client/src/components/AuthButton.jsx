@@ -1,4 +1,3 @@
-
 export default function AuthButton({
   children,
   type = "submit",
@@ -6,11 +5,7 @@ export default function AuthButton({
   disabled = false,
 }) {
   return (
-    <button
-      type={type}
-      className="auth-button"
-      disabled={disabled || loading}
-    >
+    <button type={type} className="auth-button" disabled={disabled || loading}>
       {loading ? "Please wait..." : children}
     </button>
   );

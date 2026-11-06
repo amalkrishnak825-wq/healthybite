@@ -1,4 +1,3 @@
-
 export function maskEmail(email = "") {
   const [name, domain] = email.split("@");
 
@@ -17,6 +16,6 @@ export function mmss(seconds = 0) {
   const remainingSeconds = safeSeconds % 60;
 
   return `${String(minutes).padStart(2, "0")}:${String(
-    remainingSeconds
+    remainingSeconds,
   ).padStart(2, "0")}`;
 }

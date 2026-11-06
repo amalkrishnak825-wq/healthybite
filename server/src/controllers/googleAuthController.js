@@ -1,12 +1,8 @@
-
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import {
-  signToken,
-  sendTokenCookie,
-} from "../utils/token.js";
+import { signToken, sendTokenCookie } from "../utils/token.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -46,22 +42,24 @@ export const googleLogin = asyncHandler(async (req, res) => {
       throw new AppError("Your account has been blocked.", 403);
     }
 
-    // Google has already verified this email, so link an existing password
-    // account to this Google identity. Refuse a conflicting Google identity.
     if (user.googleId && user.googleId !== googleId) {
-      throw new AppError("This email is linked to a different Google account.", 409);
+      throw new AppError(
+        "This email is linked to a different Google account.",
+        409,
+      );
     }
 
     if (!user.googleId) {
       user.googleId = googleId;
       user.isVerified = true;
-      if (!user.profileImage && payload.picture) user.profileImage = payload.picture;
+      if (!user.profileImage && payload.picture)
+        user.profileImage = payload.picture;
       await user.save();
     }
   }
 
   const token = signToken(user._id);
-sendTokenCookie(res, token);
+  sendTokenCookie(res, token);
 
   res.status(200).json({
     success: true,

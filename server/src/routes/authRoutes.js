@@ -1,7 +1,11 @@
-
 import express from "express";
 import { protectAdmin } from "../middleware/authMiddleware.js";
-import { registerLimiter, loginLimiter, adminLoginLimiter, otpLimiter } from "../middleware/rateLimiters.js";
+import {
+  registerLimiter,
+  loginLimiter,
+  adminLoginLimiter,
+  otpLimiter,
+} from "../middleware/rateLimiters.js";
 import {
   register,
   verifyRegistrationOtp,
@@ -38,6 +42,5 @@ router.post("/forgot-password", otpLimiter, forgotPassword);
 router.post("/verify-reset-otp", otpLimiter, verifyResetOtp);
 router.post("/reset-password", otpLimiter, resetPassword);
 router.post("/google", googleLogin);
-
 
 export default router;

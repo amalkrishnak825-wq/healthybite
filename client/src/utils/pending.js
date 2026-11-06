@@ -1,4 +1,3 @@
-
 const VERIFY_KEY = "hb_verify";
 const RESET_KEY = "hb_reset";
 const RESET_TOKEN_KEY = "hb_reset_token";
@@ -17,8 +16,11 @@ export const pending = {
   },
 
   getRegistration() {
-    try { return JSON.parse(sessionStorage.getItem("hb_registration") || "null"); }
-    catch { return null; }
+    try {
+      return JSON.parse(sessionStorage.getItem("hb_registration") || "null");
+    } catch {
+      return null;
+    }
   },
 
   clearVerify() {

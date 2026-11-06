@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
@@ -6,9 +5,7 @@ import { pending } from "../utils/pending";
 import AuthLayout from "../components/AuthLayout";
 import AuthField from "../components/AuthField";
 import AuthButton from "../components/AuthButton";
-import PasswordMeters, {
-  passwordChecks,
-} from "../components/PasswordMeters";
+import PasswordMeters, { passwordChecks } from "../components/PasswordMeters";
 import { ArrowLeft, CircleAlert, KeyRound, ShieldCheck } from "lucide-react";
 import "../styles/AuthFormError.css";
 
@@ -39,7 +36,12 @@ export default function ResetPasswordPage() {
     const resetToken = pending.getResetToken();
 
     if (!resetToken) {
-      navigate("/forgot-password", { replace: true, state: { error: "Your reset session has expired. Please request a new code." } });
+      navigate("/forgot-password", {
+        replace: true,
+        state: {
+          error: "Your reset session has expired. Please request a new code.",
+        },
+      });
       return;
     }
 
@@ -77,12 +79,19 @@ export default function ResetPasswordPage() {
   return (
     <AuthLayout className="auth-reset-page">
       <div className="auth-card">
-        <div className="centered-auth-icon"><KeyRound/></div>
+        <div className="centered-auth-icon">
+          <KeyRound />
+        </div>
         <h1>Reset Password</h1>
         <p>Create a new password for your HealthyBite account.</p>
 
         <form onSubmit={handleSubmit}>
-          {errorMessage && <div className="auth-form-error" role="alert"><CircleAlert size={17}/><span>{errorMessage}</span></div>}
+          {errorMessage && (
+            <div className="auth-form-error" role="alert">
+              <CircleAlert size={17} />
+              <span>{errorMessage}</span>
+            </div>
+          )}
           <AuthField
             label="New password"
             name="password"
@@ -109,8 +118,13 @@ export default function ResetPasswordPage() {
             Update Password <span>→</span>
           </AuthButton>
         </form>
-        <Link className="auth-back-link" to="/login"><ArrowLeft size={14}/> Back to Sign In</Link>
-        <div className="secure-note"><ShieldCheck size={14}/> Protected by HealthyBite End-to-End 256-Bit SSL Encryption</div>
+        <Link className="auth-back-link" to="/login">
+          <ArrowLeft size={14} /> Back to Sign In
+        </Link>
+        <div className="secure-note">
+          <ShieldCheck size={14} /> Protected by HealthyBite End-to-End 256-Bit
+          SSL Encryption
+        </div>
       </div>
     </AuthLayout>
   );

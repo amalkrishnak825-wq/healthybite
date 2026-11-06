@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema(
@@ -70,7 +69,7 @@ const addressSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Address", addressSchema);

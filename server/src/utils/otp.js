@@ -1,14 +1,11 @@
-
 import crypto from "node:crypto";
 import Otp from "../models/Otp.js";
 import AppError from "./AppError.js";
 import sendEmail from "./sendEmail.js";
 
-const EXPIRY_MS =
-  Number(process.env.OTP_EXPIRY_MINUTES || 5) * 60 * 1000;
+const EXPIRY_MS = Number(process.env.OTP_EXPIRY_MINUTES || 5) * 60 * 1000;
 
-const COOLDOWN_MS =
-  Number(process.env.OTP_RESEND_SECONDS || 30) * 1000;
+const COOLDOWN_MS = Number(process.env.OTP_RESEND_SECONDS || 30) * 1000;
 
 export const generateOtp = () =>
   crypto.randomInt(0, 1000000).toString().padStart(6, "0");
@@ -16,8 +13,7 @@ export const generateOtp = () =>
 export const hashOtp = (otp) =>
   crypto.createHash("sha256").update(otp).digest("hex");
 
-export const verifyOtp = (otp, otpHash) =>
-  hashOtp(otp) === otpHash;
+export const verifyOtp = (otp, otpHash) => hashOtp(otp) === otpHash;
 
 export const otpMeta = () => ({
   expiresAt: new Date(Date.now() + EXPIRY_MS),
@@ -32,19 +28,14 @@ export const issueOtp = async ({ email, purpose }) => {
     purpose,
   }).sort({ createdAt: -1 });
 
-  const cooldownSeconds = Number(
-    process.env.OTP_RESEND_SECONDS || 30
-  );
+  const cooldownSeconds = Number(process.env.OTP_RESEND_SECONDS || 30);
 
   if (previousOtp) {
     const secondsSinceLastOtp =
       (Date.now() - previousOtp.createdAt.getTime()) / 1000;
 
     if (secondsSinceLastOtp < cooldownSeconds) {
-      throw new AppError(
-        "Please wait before requesting another OTP.",
-        429
-      );
+      throw new AppError("Please wait before requesting another OTP.", 429);
     }
   }
 
@@ -57,7 +48,6 @@ export const issueOtp = async ({ email, purpose }) => {
     expiresAt: otpMeta().expiresAt,
   });
 
-  
   try {
     const subject =
       purpose === "change-email"
@@ -70,16 +60,15 @@ export const issueOtp = async ({ email, purpose }) => {
       to: normalizedEmail,
       subject,
       html: `<p>Your verification code is <strong>${otp}</strong>.</p>
-        <p>This code expires in ${
-          Number(process.env.OTP_EXPIRY_MINUTES || 5)
-        } minutes.</p>
+        <p>This code expires in ${Number(
+          process.env.OTP_EXPIRY_MINUTES || 5,
+        )} minutes.</p>
         <p>If you did not request this code, you can ignore this email.</p>`,
     });
   } catch (error) {
     await Otp.deleteOne({ _id: otpRecord._id });
     throw error;
   }
-
 
   return otpMeta();
 };
@@ -99,10 +88,7 @@ export const checkOtp = async ({ email, purpose, otp }) => {
   if (otpRecord.attempts >= 5) {
     await Otp.deleteOne({ _id: otpRecord._id });
 
-    throw new AppError(
-      "Too many attempts. Please request a new OTP.",
-      429
-    );
+    throw new AppError("Too many attempts. Please request a new OTP.", 429);
   }
 
   if (!verifyOtp(otp, otpRecord.otpHash)) {
@@ -111,10 +97,7 @@ export const checkOtp = async ({ email, purpose, otp }) => {
     if (otpRecord.attempts >= 5) {
       await Otp.deleteOne({ _id: otpRecord._id });
 
-      throw new AppError(
-        "Too many attempts. Please request a new OTP.",
-        429
-      );
+      throw new AppError("Too many attempts. Please request a new OTP.", 429);
     }
 
     await otpRecord.save();

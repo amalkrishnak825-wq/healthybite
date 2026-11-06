@@ -1,2 +1,123 @@
-.profile-logged-out .auth-main-centered{width:min(calc(100% - 40px),980px);max-width:none;margin:48px auto 75px;display:block}.profile-logged-out .auth-content{display:block;padding:0;background:transparent}.profile-breadcrumb{display:flex;align-items:center;gap:8px;min-height:45px;margin-bottom:42px;color:#34483a;font-size:12px}.profile-breadcrumb>a{color:#34483a;text-decoration:none}.profile-access-card{width:min(100%,625px);margin:0 auto;padding:51px 65px 47px;border-radius:19px;background:#fff;box-shadow:0 14px 36px #203c2810;text-align:center}.profile-access-card h1{margin:9px 0 10px;color:#153b29;font-family:'Playfair Display',Georgia,serif;font-size:34px}.profile-access-card>p{max-width:440px;margin:0 auto;color:#505b53;font-size:14px;line-height:1.7}.profile-access-actions{display:flex;justify-content:center;gap:14px;margin:33px 0 45px}.profile-access-actions .auth-button,.create-account-button{width:auto;min-width:145px;min-height:51px;padding:0 22px;border-radius:28px}.profile-access-actions .auth-button{flex-direction:row-reverse}.create-account-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#e9f6e9;color:#183b29!important;text-decoration:none;font-size:13px;font-weight:700}.profile-access-card .auth-back-link{margin-top:0}.brand-accent{margin-left:-8px;color:#789b72}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media(max-width:620px){.profile-logged-out .auth-main-centered{width:calc(100% - 28px);margin:28px auto 36px}.profile-breadcrumb{margin-bottom:25px;font-size:10px}.profile-access-card{padding:34px 20px;border-radius:17px}.profile-access-card h1{font-size:27px}.profile-access-card>p{font-size:12px}.profile-access-actions{gap:8px;margin:26px 0 31px}.profile-access-actions .auth-button,.create-account-button{min-width:0;min-height:45px;padding:0 16px;font-size:11px}}
+.profile-logged-out .auth-main-centered {
+  width: min(calc(100% - 40px), 980px);
+  max-width: none;
+  margin: 48px auto 75px;
+  display: block;
+}
+.profile-logged-out .auth-content {
+  display: block;
+  padding: 0;
+  background: transparent;
+}
+.profile-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  margin-bottom: 42px;
+  color: #34483a;
+  font-size: 12px;
+}
+.profile-breadcrumb > a {
+  color: #34483a;
+  text-decoration: none;
+}
+.profile-access-card {
+  width: min(100%, 625px);
+  margin: 0 auto;
+  padding: 51px 65px 47px;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 14px 36px #203c2810;
+  text-align: center;
+}
+.profile-access-card h1 {
+  margin: 9px 0 10px;
+  color: #153b29;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 34px;
+}
+.profile-access-card > p {
+  max-width: 440px;
+  margin: 0 auto;
+  color: #505b53;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.profile-access-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 33px 0 45px;
+}
+.profile-access-actions .auth-button,
+.create-account-button {
+  width: auto;
+  min-width: 145px;
+  min-height: 51px;
+  padding: 0 22px;
+  border-radius: 28px;
+}
+.profile-access-actions .auth-button {
+  flex-direction: row-reverse;
+}
+.create-account-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #e9f6e9;
+  color: #183b29 !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-access-card .auth-back-link {
+  margin-top: 0;
+}
+.brand-accent {
+  margin-left: -8px;
+  color: #789b72;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 620px) {
+  .profile-logged-out .auth-main-centered {
+    width: calc(100% - 28px);
+    margin: 28px auto 36px;
+  }
+  .profile-breadcrumb {
+    margin-bottom: 25px;
+    font-size: 10px;
+  }
+  .profile-access-card {
+    padding: 34px 20px;
+    border-radius: 17px;
+  }
+  .profile-access-card h1 {
+    font-size: 27px;
+  }
+  .profile-access-card > p {
+    font-size: 12px;
+  }
+  .profile-access-actions {
+    gap: 8px;
+    margin: 26px 0 31px;
+  }
+  .profile-access-actions .auth-button,
+  .create-account-button {
+    min-width: 0;
+    min-height: 45px;
+    padding: 0 16px;
+    font-size: 11px;
+  }
+}

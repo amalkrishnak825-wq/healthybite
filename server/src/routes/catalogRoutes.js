@@ -2,10 +2,27 @@ import express from "express";
 import protect, { protectAdmin } from "../middleware/authMiddleware.js";
 import { uploadProductImages } from "../middleware/productUpload.js";
 import {
-  addCartItem, createCategory, createProduct, deleteCategory, deleteProduct,
-  getAdminCatalogStats, getAdminProduct, getCart, getProduct, getWishlist, listAdminCategories, listAdminProducts,
-  listCategories, listProducts, removeCartItem, removeWishlistItem, toggleWishlist,
-  updateCartItem, updateCategory, updateProduct, validateCheckout,
+  addCartItem,
+  createCategory,
+  createProduct,
+  deleteCategory,
+  deleteProduct,
+  getAdminCatalogStats,
+  getAdminProduct,
+  getCart,
+  getProduct,
+  getWishlist,
+  listAdminCategories,
+  listAdminProducts,
+  listCategories,
+  listProducts,
+  removeCartItem,
+  removeWishlistItem,
+  toggleWishlist,
+  updateCartItem,
+  updateCategory,
+  updateProduct,
+  validateCheckout,
 } from "../controllers/catalogController.js";
 
 const router = express.Router();

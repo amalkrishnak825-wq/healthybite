@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getErrorMessage, getFieldErrors } from "../api/axios";
@@ -7,11 +6,31 @@ import AuthLayout from "../components/AuthLayout";
 import AuthField from "../components/AuthField";
 import AuthButton from "../components/AuthButton";
 import GoogleButton from "../components/GoogleButton";
-import PasswordMeters, {
-  passwordChecks,
-} from "../components/PasswordMeters";
+import PasswordMeters, { passwordChecks } from "../components/PasswordMeters";
 import { ArrowRight, CircleAlert, Leaf } from "lucide-react";
 import "../styles/AuthFormError.css";
+
+function getNameError(value, required = false) {
+  const name = value.trim();
+  if (!name) return required ? "Please enter your name." : "";
+  if (name.length < 2 || name.length > 80)
+    return "Your name must be between 2 and 80 characters.";
+  if (!/^[\p{L}\p{M}]+(?:[ '\u2019.-][\p{L}\p{M}]+)*$/u.test(name))
+    return "Use letters only. Spaces, hyphens, apostrophes, and periods are allowed.";
+  return "";
+}
+
+function getEmailError(value, required = false) {
+  const email = value.trim();
+  if (!email) return required ? "Please enter your email address." : "";
+  if (
+    !/^[^\s@]{2,}@[a-z\d](?:[a-z\d-]*[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]*[a-z\d])?)+$/i.test(
+      email,
+    )
+  )
+    return "Enter a valid email with at least 2 characters before @.";
+  return "";
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -35,7 +54,17 @@ export default function RegisterPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    setErrors((previous) => ({ ...previous, [name]: "", form: "" }));
+    const liveError =
+      name === "name"
+        ? getNameError(value)
+        : name === "email"
+          ? getEmailError(value)
+          : "";
+    setErrors((previous) => ({
+      ...previous,
+      [name]: liveError,
+      form: "",
+    }));
   }
 
   async function handleSubmit(event) {
@@ -44,13 +73,10 @@ export default function RegisterPage() {
 
     const nextErrors = {};
 
-    if (!form.name.trim()) {
-      nextErrors.name = "Please enter your name.";
-    }
-
-    if (!form.email.trim()) {
-      nextErrors.email = "Please enter your email address.";
-    }
+    const nameError = getNameError(form.name, true);
+    const emailError = getEmailError(form.email, true);
+    if (nameError) nextErrors.name = nameError;
+    if (emailError) nextErrors.email = emailError;
 
     if (!Object.values(passwordChecks(form.password)).every(Boolean)) {
       nextErrors.password = "Please meet all password requirements.";
@@ -79,8 +105,16 @@ export default function RegisterPage() {
       });
 
       pending.setVerify(form.email.trim());
-      pending.setRegistration({ name: form.name.trim(), password: form.password });
-      navigate("/verify-email", { state: { notice: "Account created. Check your email for the verification code." } });
+      pending.setRegistration({
+        name: form.name.trim(),
+        password: form.password,
+      });
+      navigate("/verify-email", {
+        state: {
+          notice:
+            "Account created. Check your email for the verification code.",
+        },
+      });
     } catch (error) {
       setErrors({ ...getFieldErrors(error), form: getErrorMessage(error) });
     } finally {
@@ -91,9 +125,17 @@ export default function RegisterPage() {
   return (
     <AuthLayout image="/login-bg.jpg" className="auth-register-page">
       <div className="auth-card">
-        <div className="auth-brand"><span className="brand-symbol"><Leaf size={19}/></span>Healthy<span className="brand-accent">Bite</span></div>
+        <div className="auth-brand">
+          <span className="brand-symbol">
+            <Leaf size={19} />
+          </span>
+          Healthy<span className="brand-accent">Bite</span>
+        </div>
         <h1>Create Your Account</h1>
-        <p>Start your healthy journey with seasonal, chef-crafted nutritious meals delivered directly to your doorstep.</p>
+        <p>
+          Start your healthy journey with seasonal, chef-crafted nutritious
+          meals delivered directly to your doorstep.
+        </p>
 
         <GoogleButton />
 
@@ -102,7 +144,12 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {errors.form && <div className="auth-form-error" role="alert"><CircleAlert size={17}/><span>{errors.form}</span></div>}
+          {errors.form && (
+            <div className="auth-form-error" role="alert">
+              <CircleAlert size={17} />
+              <span>{errors.form}</span>
+            </div>
+          )}
           <AuthField
             label="Full name"
             name="name"
@@ -121,6 +168,7 @@ export default function RegisterPage() {
             onChange={handleChange}
             placeholder="you@example.com"
             autoComplete="email"
+            hint="Use an inbox you can access; we’ll send a verification code."
             error={errors.email}
           />
 
@@ -155,15 +203,15 @@ export default function RegisterPage() {
               checked={form.agree}
               onChange={handleChange}
             />
-            I agree to HealthyBite’s <Link to="/terms">Terms of Service</Link> and acknowledge the <Link to="/privacy-policy">Privacy Policy</Link>.
+            I agree to HealthyBite’s <Link to="/terms">Terms of Service</Link>{" "}
+            and acknowledge the <Link to="/privacy-policy">Privacy Policy</Link>
+            .
           </label>
 
-          {errors.agree && (
-            <p className="field-error">{errors.agree}</p>
-          )}
+          {errors.agree && <p className="field-error">{errors.agree}</p>}
 
           <AuthButton loading={loading}>
-            Create Account <ArrowRight size={15}/>
+            Create Account <ArrowRight size={15} />
           </AuthButton>
         </form>
 
