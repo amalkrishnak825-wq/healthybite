@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
 import "../styles/Catalog.css";
 
 export default function CartPage() {
+  const navigate = useNavigate();
   const [cart, setCart] = useState({ items: [], total: 0, valid: false });
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
   const loadCart = useCallback(async () => {
     const response = await api.get("/cart");
     setCart(response.data);
@@ -38,20 +39,6 @@ export default function CartPage() {
       await loadCart();
     } catch (failure) {
       setError(getErrorMessage(failure));
-    }
-  }
-  async function checkout() {
-    setBusy(true);
-    setError("");
-    try {
-      const response = await api.post("/cart/validate-checkout");
-      setError(
-        `Cart verified. Current total: ₹${response.data.total.toFixed(2)}. Checkout is not available yet.`,
-      );
-    } catch (failure) {
-      setError(getErrorMessage(failure));
-    } finally {
-      setBusy(false);
     }
   }
   return (
@@ -107,26 +94,13 @@ export default function CartPage() {
                         {status}
                       </small>
                     </div>
-                    <div className="cart-quantity">
-                      <button
-                        disabled={item.quantity <= 1}
-                        onClick={() => quantity(product._id, item.quantity - 1)}
-                        aria-label="Decrease quantity"
-                      >
-                        −
-                      </button>
-                      <span>{item.quantity}</span>
-                      <button
-                        disabled={
-                          !item.valid ||
-                          item.quantity >= Math.min(product.stock, 99)
-                        }
-                        onClick={() => quantity(product._id, item.quantity + 1)}
-                        aria-label="Increase quantity"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <QuantityStepper
+                      value={item.quantity}
+                      onDecrease={() => quantity(product._id, item.quantity - 1)}
+                      onIncrease={() => quantity(product._id, item.quantity + 1)}
+                      decreaseDisabled={item.quantity <= 1}
+                      increaseDisabled={!item.valid || item.quantity >= Math.min(product.stock, 99)}
+                    />
                     <b className="cart-line-total">
                       ₹{item.lineTotal.toFixed(2)}
                     </b>
@@ -145,8 +119,8 @@ export default function CartPage() {
               <span>
                 Total <b>₹{cart.total.toFixed(2)}</b>
               </span>
-              <button disabled={!cart.valid || busy} onClick={checkout}>
-                {busy ? "Checking…" : "Continue to checkout"}
+              <button disabled={!cart.valid} onClick={() => navigate("/checkout")}>
+                Continue to checkout
               </button>
             </div>
           </>

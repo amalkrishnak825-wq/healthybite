@@ -17,28 +17,67 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import api, { getErrorMessage } from "../api/axios";
+import useFocusRefresh from "../hooks/useFocusRefresh";
 import "../styles/Home.css";
 import "../styles/Auth.css";
 import "../styles/Catalog.css";
 
 const categories = [
-  [Salad, "Healthy Bowls", "16 Meals"],
-  [Leaf, "Salads", "10 Meals"],
-  [CupSoda, "Smoothies", "8 Blends"],
+  [Salad, "Healthy Bowls"],
+  [Leaf, "Salads"],
+  [CupSoda, "Smoothies"],
 ];
+const categoryOrder = ["healthy bowls", "salads", "smoothies"];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [meals, setMeals] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [mealsLoading, setMealsLoading] = useState(true);
   const [mealsError, setMealsError] = useState("");
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [wishlistBusyId, setWishlistBusyId] = useState("");
+  const focusRevision = useFocusRefresh();
+
+  useEffect(() => {
+    let active = true;
+
+    api
+      .get("/categories")
+      .then((response) => {
+        if (!active) return;
+
+        const allowedNames = new Set(categoryOrder);
+        const uniqueCategories = new Map();
+
+        (response.data.categories || []).forEach((category) => {
+          const normalizedName = category.name?.trim().toLowerCase();
+          if (allowedNames.has(normalizedName) && !uniqueCategories.has(normalizedName)) {
+            uniqueCategories.set(normalizedName, category);
+          }
+        });
+
+        setAvailableCategories(
+          categoryOrder
+            .map((name) => uniqueCategories.get(name))
+            .filter(Boolean),
+        );
+      })
+      .catch(() => {
+        if (active) setAvailableCategories([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [focusRevision]);
 
   useEffect(() => {
     let active = true;
     api
-      .get("/products", { params: { page: 1, limit: 4, sort: "recent" } })
+      .get("/products", {
+        params: { page: 1, limit: 4, sort: "recent", featured: true },
+      })
       .then((response) => {
         if (active) setMeals(response.data.products || []);
       })
@@ -51,7 +90,7 @@ export default function HomePage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [focusRevision]);
 
   useEffect(() => {
     let active = true;
@@ -160,15 +199,29 @@ export default function HomePage() {
             </div>
           </div>
           <div className="category-grid">
-            {categories.map(([Icon, title, detail]) => (
-              <a href="/products" className="category-card" key={title}>
-                <span className="category-icon">
-                  <Icon size={18} />
-                </span>
-                <b>{title}</b>
-                <small>{detail}</small>
-              </a>
-            ))}
+            {categories
+              .map(([Icon, title]) => ({
+                Icon,
+                title,
+                category: availableCategories.find(
+                  (item) =>
+                    item.name?.trim().toLowerCase() === title.toLowerCase(),
+                ),
+              }))
+              .filter((item) => item.category)
+              .map(({ Icon, title, category }) => (
+                <Link
+                  to={`/products?category=${encodeURIComponent(category._id)}`}
+                  className="category-card"
+                  key={title}
+                >
+                  <span className="category-icon">
+                    <Icon size={18} />
+                  </span>
+                  <b>{title}</b>
+                  <small>Explore meals</small>
+                </Link>
+              ))}
           </div>
         </section>
         <section className="fresh-section" id="meals">

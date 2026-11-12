@@ -22,6 +22,7 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     stock: { type: Number, required: true, min: 0, default: 0 },
+    isFeatured: { type: Boolean, default: false, index: true },
     images: {
       type: [
         {

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import QuantityStepper from "../components/QuantityStepper";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
@@ -156,27 +157,16 @@ export default function WishlistPage() {
                   {status}
                 </small>
               </div>
-              <div className="cart-quantity wishlist-quantity-control">
-                <button
-                  type="button"
-                  disabled={quantity <= 1}
-                  onClick={() => changeQuantity(product, -1)}
-                  aria-label={`Decrease ${product.name} quantity`}
-                >
-                  <Minus size={13} />
-                </button>
-                <span>{quantity}</span>
-                <button
-                  type="button"
-                  disabled={
-                    !canOrder || quantity >= Math.min(product.stock, 99)
-                  }
-                  onClick={() => changeQuantity(product, 1)}
-                  aria-label={`Increase ${product.name} quantity`}
-                >
-                  <Plus size={13} />
-                </button>
-              </div>
+              <QuantityStepper
+                className="wishlist-quantity-control"
+                value={quantity}
+                onDecrease={() => changeQuantity(product, -1)}
+                onIncrease={() => changeQuantity(product, 1)}
+                decreaseDisabled={quantity <= 1}
+                increaseDisabled={!canOrder || quantity >= Math.min(product.stock, 99)}
+                decreaseLabel={`Decrease ${product.name} quantity`}
+                increaseLabel={`Increase ${product.name} quantity`}
+              />
               <b className="cart-line-total">
                 ₹{(Number(product.price) * quantity).toFixed(2)}
               </b>

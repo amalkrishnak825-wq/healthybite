@@ -23,7 +23,10 @@ const authenticate = async (token) => {
   }
 
   if (user.isBlocked) {
-    throw new AppError("Your account has been blocked.", 403);
+    throw new AppError(
+      "Your account has been blocked by an administrator. Please contact HealthyBite support.",
+      403,
+    );
   }
 
   if (

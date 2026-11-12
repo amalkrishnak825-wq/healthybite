@@ -1641,6 +1641,10 @@
   background: #e9f5e9;
   color: #2b6840;
 }
+.action-confirm-icon.danger {
+  background: #fff0ed;
+  color: #b42318;
+}
 .action-confirm-dialog h2 {
   margin: 0 0 9px;
   color: #183a27;
@@ -1677,6 +1681,10 @@
   border: 1px solid #244734;
   background: #244734;
   color: #fff;
+}
+.action-confirm-accept.danger {
+  border-color: #b42318;
+  background: #b42318;
 }
 .action-confirm-buttons button:disabled,
 .action-confirm-close:disabled {

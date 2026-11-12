@@ -278,7 +278,10 @@ export const login = asyncHandler(async (req, res) => {
   }
 
   if (user.isBlocked) {
-    throw new AppError("Your account has been blocked.", 403);
+    throw new AppError(
+      "Your account has been blocked by an administrator. Please contact HealthyBite support.",
+      403,
+    );
   }
 
   const token = signToken(user._id.toString());

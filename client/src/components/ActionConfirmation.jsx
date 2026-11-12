@@ -6,6 +6,7 @@ export default function ActionConfirmation({
   message,
   confirmLabel,
   busy = false,
+  variant = "default",
   onCancel,
   onConfirm,
 }) {
@@ -33,7 +34,7 @@ export default function ActionConfirmation({
         >
           <X size={19} />
         </button>
-        <span className="action-confirm-icon">
+        <span className={`action-confirm-icon ${variant}`}>
           <AlertCircle size={22} />
         </span>
         <h2 id="action-confirm-title">{title}</h2>
@@ -49,7 +50,7 @@ export default function ActionConfirmation({
           </button>
           <button
             type="button"
-            className="action-confirm-accept"
+            className={`action-confirm-accept ${variant}`}
             onClick={onConfirm}
             disabled={busy}
           >

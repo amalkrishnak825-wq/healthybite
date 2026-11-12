@@ -1,0 +1,24 @@
+import express from "express";
+import protect, { protectAdmin } from "../middleware/authMiddleware.js";
+import { cancelOrder, cancelReturnRequest, failPayment, getMyOrder, getMyOrders, placeOrder, quoteCheckout, requestReturn, retryPayment, verifyPayment } from "../controllers/orderController.js";
+import { acceptReturnRequest, getAdminOrder, getAdminOrderReports, listAdminOrders, markOrderDelivered, markOrderOutForDelivery } from "../controllers/adminOrderController.js";
+
+const router = express.Router();
+router.get("/admin/reports", protectAdmin, getAdminOrderReports);
+router.get("/admin", protectAdmin, listAdminOrders);
+router.get("/admin/:id", protectAdmin, getAdminOrder);
+router.patch("/admin/:id/return/accept", protectAdmin, acceptReturnRequest);
+router.patch("/admin/:id/deliver", protectAdmin, markOrderDelivered);
+router.patch("/admin/:id/out-for-delivery", protectAdmin, markOrderOutForDelivery);
+router.use(protect);
+router.post("/quote", quoteCheckout);
+router.post("/", placeOrder);
+router.post("/verify-payment", verifyPayment);
+router.post("/:id/retry-payment", retryPayment);
+router.post("/:id/cancel", cancelOrder);
+router.post("/:id/return", requestReturn);
+router.post("/:id/return/cancel", cancelReturnRequest);
+router.post("/:id/payment-failed", failPayment);
+router.get("/", getMyOrders);
+router.get("/:id", getMyOrder);
+export default router;

@@ -12,6 +12,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import api from "../api/axios";
+import useFocusRefresh from "../hooks/useFocusRefresh";
 import "../styles/Catalog.css";
 
 const dietaryTabs = [{ label: "Protein Meals", tag: "High Protein" }];
@@ -35,6 +36,8 @@ export default function CatalogPage() {
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [wishlistBusyId, setWishlistBusyId] = useState("");
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const focusRevision = useFocusRefresh();
   const search = params.get("search") || "";
   const category = params.get("category") || "";
   const sort = params.get("sort") || "recent";
@@ -49,9 +52,12 @@ export default function CatalogPage() {
   useEffect(() => {
     api
       .get("/categories")
-      .then((response) => setCategories(response.data.categories || []))
+      .then((response) => {
+        setCategories(response.data.categories || []);
+        setCategoriesLoaded(true);
+      })
       .catch(() => {});
-  }, []);
+  }, [focusRevision]);
   useEffect(() => {
     let active = true;
     api
@@ -71,7 +77,6 @@ export default function CatalogPage() {
   }, []);
   useEffect(() => {
     let active = true;
-    setLoading(true);
     api
       .get("/products", {
         params: {
@@ -102,7 +107,21 @@ export default function CatalogPage() {
     return () => {
       active = false;
     };
-  }, [search, category, sort, minPrice, maxPrice, dietaryTags, page]);
+  }, [search, category, sort, minPrice, maxPrice, dietaryTags, page, focusRevision]);
+
+  useEffect(() => {
+    if (!categoriesLoaded || !category) return;
+    const activeIds = new Set(categories.map((item) => item._id));
+    const selectedIds = category.split(",").filter(Boolean);
+    const remainingIds = selectedIds.filter((id) => activeIds.has(id));
+    if (remainingIds.length === selectedIds.length) return;
+
+    const next = new URLSearchParams(params);
+    if (remainingIds.length) next.set("category", remainingIds.join(","));
+    else next.delete("category");
+    next.delete("page");
+    setParams(next, { replace: true });
+  }, [categories, categoriesLoaded, category, params, setParams]);
 
   const orderedCategories = useMemo(
     () =>

@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Heart, ShoppingBag } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Flame,
+  Heart,
+  Leaf,
+  ShoppingBag,
+} from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
@@ -8,6 +17,7 @@ import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
 import "../styles/Catalog.css";
+import "../styles/ProductDetail.css";
 
 export default function ProductPage() {
   const { slug } = useParams();
@@ -105,22 +115,29 @@ export default function ProductPage() {
     product.compareAtPrice > product.price
       ? Math.round((1 - product.price / product.compareAtPrice) * 100)
       : 0;
+  const vegetarian = (product.dietaryTags || []).some((tag) =>
+    ["Vegetarian", "Vegan"].includes(tag),
+  );
+  function moveImage(direction) {
+    setImageIndex((current) => (current + direction + images.length) % images.length);
+    setZoom(false);
+  }
   return (
     <div className="home-page">
       <Header />
-      <main className="catalog-page">
-        <div className="catalog-breadcrumb">
+      <main className="catalog-page product-detail-page">
+        <nav className="catalog-breadcrumb product-detail-breadcrumb" aria-label="Breadcrumb">
           <Link to="/">Home</Link> /{" "}
           <Link to={`/products?category=${product.category?._id || ""}`}>
             {product.category?.name}
           </Link>{" "}
           / <Link to="/products">Products</Link> / {product.name}
-        </div>
+        </nav>
         {error && <div className="catalog-error">{error}</div>}
         <div className="product-detail-layout">
-          <div>
+          <div className="product-detail-gallery">
             <div
-              className={`product-gallery-main ${zoom ? "zoom" : ""}`}
+              className={`product-gallery-main ${zoom ? "zoom" : ""} ${!product.stock ? "out-of-stock" : ""}`}
               onClick={() => setZoom((value) => !value)}
             >
               <img
@@ -131,6 +148,23 @@ export default function ProductPage() {
                 }
                 alt={images[imageIndex]?.alt || product.name}
               />
+              <div className="product-gallery-badges">
+                <span className={`product-gallery-diet ${vegetarian ? "vegetarian" : ""}`}>
+                  <Leaf size={13} /> {vegetarian ? "Plant based" : "Chef crafted"}
+                </span>
+                {!product.stock ? (
+                  <span className="product-gallery-stock">Out of stock</span>
+                ) : discount > 0 ? (
+                  <span className="product-gallery-offer">{discount}% OFF</span>
+                ) : null}
+              </div>
+              {images.length > 1 && (
+                <>
+                  <button type="button" className="product-gallery-arrow previous" aria-label="Previous image" onClick={(event) => { event.stopPropagation(); moveImage(-1); }}><ChevronLeft size={20} /></button>
+                  <button type="button" className="product-gallery-arrow next" aria-label="Next image" onClick={(event) => { event.stopPropagation(); moveImage(1); }}><ChevronRight size={20} /></button>
+                  <span className="product-gallery-count">{imageIndex + 1} / {images.length}</span>
+                </>
+              )}
             </div>
             <div className="product-thumbs">
               {images.map((image, index) => (
@@ -153,19 +187,23 @@ export default function ProductPage() {
                 </button>
               ))}
             </div>
-            <small className="catalog-zoom-hint">Click image to zoom</small>
+            <small className="catalog-zoom-hint">Tap image to zoom · Use arrows to browse</small>
           </div>
           <section className="product-detail-copy">
-            <span className="home-section-label">
-              {product.category?.name || "HEALTHYBITE"}
-            </span>
+            <span className="product-detail-category"><Leaf size={14} /> {product.category?.name || "HEALTHYBITE"}</span>
             <h1>{product.name}</h1>
-            <p>{product.description}</p>
+            {product.subtitle && <p className="product-detail-subtitle">{product.subtitle}</p>}
+            <div className="product-detail-facts">
+              {product.prepTime && <span><Clock3 size={15} /> Ready in {product.prepTime}</span>}
+              {Number(product.nutrition?.calories) > 0 && <span><Flame size={15} /> {Math.round(product.nutrition.calories)} kcal</span>}
+              {product.dietaryTags?.slice(0, 2).map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
+            <p className="product-detail-description">{product.description}</p>
             <div
               className={`product-detail-price ${discount ? "has-offer" : ""}`}
             >
               {discount > 0 && (
-                <span className="product-offer-caption">OFFER PRICE</span>
+                  <span className="product-offer-caption">YOUR OFFER PRICE</span>
               )}
               <span className="product-current-price">
                 ₹{Number(product.price).toFixed(2)}
@@ -177,21 +215,25 @@ export default function ProductPage() {
                 </>
               )}
             </div>
-            <b className={product.stock ? "stock-available" : "stock-empty"}>
-              {product.stock ? `${product.stock} available` : "Out of stock"}
-            </b>
-            <ul className="product-highlights">
-              {(product.highlights || []).map((highlight, index) => (
-                <li key={`${highlight}-${index}`}>{highlight}</li>
-              ))}
-            </ul>
+            <div className={`product-detail-availability ${product.stock ? "available" : "unavailable"}`}>
+              <span className="product-availability-dot" />
+              <span>{product.stock ? product.stock < 6 ? `Only ${product.stock} left in stock` : "Fresh and available" : "Currently out of stock"}</span>
+            </div>
+            {product.highlights?.length > 0 && <div className="product-highlights-block">
+              <h2>Why you’ll love it</h2>
+              <ul className="product-highlights">
+                {product.highlights.map((highlight, index) => (
+                  <li key={`${highlight}-${index}`}><Check size={14} /> {highlight}</li>
+                ))}
+              </ul>
+            </div>}
             <div className="product-detail-actions">
               <button
                 className="home-primary"
                 disabled={!product.stock}
                 onClick={() => setPendingAction("cart")}
               >
-                <ShoppingBag size={16} /> Add to cart
+                <ShoppingBag size={17} /> {product.stock ? "Add to cart" : "Currently unavailable"}
               </button>
               <button
                 className={`catalog-card-wish ${wishlist ? "selected" : ""}`}
@@ -208,7 +250,7 @@ export default function ProductPage() {
           </section>
         </div>
         <section className="related-products">
-          <h2>Related products</h2>
+          <div className="product-related-heading"><span className="home-section-label">MORE TO ENJOY</span><h2>You might also like</h2><p>More fresh picks from our kitchen.</p></div>
           <div className="catalog-grid">
             {related.map((item) => (
               <ProductCard key={item._id} product={item} />

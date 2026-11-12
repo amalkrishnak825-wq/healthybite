@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
-
     async function checkAuth() {
       try {
         const response = await api.get("/profile/me");

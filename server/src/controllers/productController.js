@@ -104,6 +104,8 @@ const normalizeProductInput = (body, uploadedImages = [], existing = null) => {
   }
   if (body.isPublished !== undefined)
     data.isPublished = booleanValue(body.isPublished);
+  if (body.isFeatured !== undefined)
+    data.isFeatured = booleanValue(body.isFeatured);
   if (body.isBlocked !== undefined)
     data.isBlocked = booleanValue(body.isBlocked);
   const imageRecords = uploadedImages.map((image) => ({
@@ -202,13 +204,19 @@ const validateProduct = async (data, partial = false) => {
 
 export const listProducts = asyncHandler(async (req, res) => {
   const { page, limit } = parsePagination(req.query, {
-    defaultLimit: 12,
-    maxLimit: 48,
+    defaultLimit: 8,
+    maxLimit: 8,
   });
   const search = String(req.query.search || "")
     .trim()
     .slice(0, 100);
   const filter = { ...publicProductFilter };
+  if (req.query.featured === "true") {
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ isFeatured: true }, { isFeatured: { $exists: false } }] },
+    ];
+  }
   if (search)
     filter.$or = [
       { name: { $regex: escapeRegex(search), $options: "i" } },

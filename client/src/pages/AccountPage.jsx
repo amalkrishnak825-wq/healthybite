@@ -13,6 +13,7 @@ import {
   MapPin,
   Plus,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import AuthLayout from "../components/AuthLayout";
 import "../styles/AppPages.css";
@@ -155,6 +156,11 @@ export default function AccountPage() {
                 <strong>Wishlist</strong>
                 <small>Meals you saved for later</small>
               </span>
+              <ArrowRight size={17} />
+            </Link>
+            <Link to="/wallet">
+              <span className="account-shortcut-icon"><Wallet size={19} /></span>
+              <span className="account-shortcut-copy"><strong>My Wallet</strong><small>Balance and return refunds</small></span>
               <ArrowRight size={17} />
             </Link>
           </nav>

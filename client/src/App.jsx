@@ -18,19 +18,37 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminCustomerPage from "./pages/AdminCustomerPage";
 import AdminMealsPage from "./pages/AdminMealsPage";
+import AdminOrdersPage from "./pages/AdminOrdersPage";
+import AdminCouponsPage from "./pages/AdminCouponsPage";
+import AdminReportsPage from "./pages/AdminReportsPage";
+import AdminOverviewPage from "./pages/AdminOverviewPage";
 import AdminMealEditorPage from "./pages/AdminMealEditorPage";
 import CatalogPage from "./pages/CatalogPage";
 import ProductPage from "./pages/ProductPage";
 import CartPage from "./pages/CartPage";
 import WishlistPage from "./pages/WishlistPage";
 import OrdersPage from "./pages/OrdersPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentResultPage from "./pages/PaymentResultPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
+import ReturnRequestPage from "./pages/ReturnRequestPage";
+import WalletPage from "./pages/WalletPage";
+import AboutPage from "./pages/AboutPage";
 import "./styles/Admin.css";
 import "./styles/NativeValidation.css";
 
-function AdminRoute({ detail = false, meals = false, mealEditor = false }) {
+function AdminRoute({ detail = false, meals = false, mealEditor = false, orders = false, coupons = false, reports = false, overview = false }) {
   const admin = sessionStorage.getItem("healthyBiteAdmin") === "true";
   return admin ? (
-    mealEditor ? (
+    orders ? (
+      <AdminOrdersPage />
+    ) : coupons ? (
+      <AdminCouponsPage />
+    ) : reports ? (
+      <AdminReportsPage />
+    ) : overview ? (
+      <AdminOverviewPage />
+    ) : mealEditor ? (
       <AdminMealEditorPage />
     ) : meals ? (
       <AdminMealsPage />
@@ -132,6 +150,7 @@ export default function App() {
         />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/products" element={<CatalogPage />} />
           <Route path="/products/:slug" element={<ProductPage />} />
           <Route element={<GuestRoute />}>
@@ -163,16 +182,27 @@ export default function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment/success/:orderId" element={<PaymentResultPage />} />
+            <Route path="/payment/failure/:orderId" element={<PaymentResultPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/wallet" element={<WalletPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+            <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
           </Route>
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminRoute overview />} />
+          <Route path="/admin/overview" element={<AdminRoute overview />} />
           <Route path="/admin/meals" element={<AdminRoute meals />} />
           <Route path="/admin/meals/new" element={<AdminRoute mealEditor />} />
           <Route
             path="/admin/meals/:productId/edit"
             element={<AdminRoute mealEditor />}
           />
+          <Route path="/admin/orders" element={<AdminRoute orders />} />
+          <Route path="/admin/coupons" element={<AdminRoute coupons />} />
+          <Route path="/admin/reports" element={<AdminRoute reports />} />
           <Route path="/admin/users" element={<AdminRoute />} />
           <Route path="/admin/users/:id" element={<AdminRoute detail />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -22,6 +22,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [notice] = useState(location.state?.notice || "");
+
+  useEffect(() => {
+    sessionStorage.removeItem("healthyBiteBlockedNotice");
+  }, []);
 
   function handleChange(event) {
     const { name, value, checked, type } = event.target;

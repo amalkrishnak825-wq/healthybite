@@ -1,16 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  Activity,
-  ArrowLeft,
-  Minus,
-  Plus,
-  Save,
-  UtensilsCrossed,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
 import AdminSidebar from "../components/AdminSidebar";
+import MealBasicInformation from "../components/admin/meals/MealBasicInformation";
+import MealCropDialog from "../components/admin/meals/MealCropDialog";
+import MealNutritionFields from "../components/admin/meals/MealNutritionFields";
+import MealPublishingControls from "../components/admin/meals/MealPublishingControls";
+import MealVisuals from "../components/admin/meals/MealVisuals";
+import useMealImages from "../hooks/useMealImages";
 import useAdminErrorToast from "../utils/useAdminErrorToast";
 import "cropperjs/dist/cropper.css";
 import "../styles/Admin.css";
@@ -39,28 +37,36 @@ const emptyMeal = {
   dietaryTags: [],
   nutrition: { calories: "", protein: "", carbs: "", fats: "" },
   isPublished: false,
+  isFeatured: false,
   isBlocked: false,
 };
 export default function AdminMealEditorPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const editing = Boolean(productId);
-  const cropImageRef = useRef(null);
-  const cropperRef = useRef(null);
   const [meal, setMeal] = useState(emptyMeal);
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [removeImages, setRemoveImages] = useState([]);
-  const [files, setFiles] = useState([]);
-  const [filePreviews, setFilePreviews] = useState([]);
-  const [cropQueue, setCropQueue] = useState([]);
-  const [cropIndex, setCropIndex] = useState(0);
-  const [cropperReady, setCropperReady] = useState(false);
-  const [cropSource, setCropSource] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   useAdminErrorToast(error, setError);
+  const {
+    cropImageRef,
+    cropperRef,
+    files,
+    filePreviews,
+    cropQueue,
+    cropIndex,
+    cropperReady,
+    cropSource,
+    addImageFiles,
+    initializeCropper,
+    applyCurrentCrop,
+    cancelCrop,
+    removeSelectedFile,
+  } = useMealImages({ existingImages, removeImages, onError: setError });
 
   useEffect(() => {
     let active = true;
@@ -92,6 +98,7 @@ export default function AdminMealEditorPage() {
               ]),
             ),
             isPublished: product.isPublished,
+            isFeatured: product.isFeatured ?? true,
             isBlocked: product.isBlocked,
           });
           setExistingImages(product.images || []);
@@ -114,29 +121,6 @@ export default function AdminMealEditorPage() {
     };
   }, [editing, productId]);
 
-  useEffect(() => {
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setFilePreviews(previews);
-    return () => previews.forEach(URL.revokeObjectURL);
-  }, [files]);
-
-  useEffect(() => {
-    if (!cropQueue[cropIndex]) {
-      setCropSource("");
-      return;
-    }
-    const url = URL.createObjectURL(cropQueue[cropIndex]);
-    setCropSource(url);
-    return () => URL.revokeObjectURL(url);
-  }, [cropQueue, cropIndex]);
-
-  useEffect(() => {
-    if (!cropQueue.length) {
-      cropperRef.current?.destroy();
-      cropperRef.current = null;
-    }
-  }, [cropQueue.length]);
-
   function setField(key, value) {
     setMeal((current) => ({ ...current, [key]: value }));
   }
@@ -148,92 +132,12 @@ export default function AdminMealEditorPage() {
         : [...meal.dietaryTags, tag],
     );
   }
-  function addImageFiles(selected) {
-    const keptCount = existingImages.filter(
-      (image) => !removeImages.includes(image.url),
-    ).length;
-    const remaining = Math.max(
-      0,
-      5 - keptCount - files.length - cropQueue.length,
-    );
-    const validFiles = selected.filter((file) =>
-      file.type.startsWith("image/"),
-    );
-    const accepted = validFiles.slice(0, remaining);
-    if (validFiles.length > remaining)
-      setError("A meal can have at most 5 images.");
-    if (accepted.length) {
-      cropperRef.current?.destroy();
-      cropperRef.current = null;
-      setCropperReady(false);
-      setCropQueue(accepted);
-      setCropIndex(0);
-    }
+  function setNutritionField(key, value) {
+    setField("nutrition", { ...meal.nutrition, [key]: value });
   }
-
-  function initializeCropper(event) {
-    const image = event.currentTarget;
-    setCropperReady(false);
-    cropperRef.current?.destroy();
-    cropperRef.current = null;
-    import("cropperjs")
-      .then(({ default: Cropper }) => {
-        if (!image.isConnected) return;
-        cropperRef.current = new Cropper(image, {
-          aspectRatio: 1,
-          viewMode: 1,
-          dragMode: "move",
-          autoCropArea: 0.9,
-          responsive: true,
-          background: false,
-          guides: false,
-          center: true,
-          highlight: false,
-          movable: true,
-          cropBoxMovable: false,
-          cropBoxResizable: false,
-          toggleDragModeOnDblclick: false,
-          ready: () => setCropperReady(true),
-        });
-      })
-      .catch(() =>
-        setError("Could not open the image cropper. Please try another image."),
-      );
+  function removeExistingImage(url) {
+    setRemoveImages((current) => [...current, url]);
   }
-
-  async function applyCurrentCrop() {
-    const sourceFile = cropQueue[cropIndex];
-    const canvas = cropperRef.current?.getCroppedCanvas({
-      width: 1200,
-      height: 1200,
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: "high",
-    });
-    if (!sourceFile || !canvas) return;
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/webp", 0.88),
-    );
-    if (!blob) {
-      setError("Could not crop this image. Please try another image.");
-      return;
-    }
-    const cropped = new File(
-      [blob],
-      `${sourceFile.name.replace(/\.[^.]+$/, "")}.webp`,
-      { type: "image/webp" },
-    );
-    setFiles((current) => [...current, cropped]);
-    if (cropIndex + 1 < cropQueue.length) {
-      cropperRef.current?.destroy();
-      cropperRef.current = null;
-      setCropperReady(false);
-      setCropIndex(cropIndex + 1);
-    } else {
-      setCropQueue([]);
-      setCropIndex(0);
-    }
-  }
-
   async function save(event, publish = meal.isPublished) {
     event.preventDefault();
     const keptImageCount = existingImages.filter(
@@ -270,6 +174,7 @@ export default function AdminMealEditorPage() {
       data.append("dietaryTags", JSON.stringify(meal.dietaryTags));
       data.append("nutrition", JSON.stringify(meal.nutrition));
       data.append("isPublished", String(publish));
+      data.append("isFeatured", String(meal.isFeatured));
       data.append("isBlocked", String(meal.isBlocked));
       data.append("removeImages", JSON.stringify(removeImages));
       for (const file of files) data.append("images", file);
@@ -357,325 +262,29 @@ export default function AdminMealEditorPage() {
               onSubmit={(event) => save(event)}
             >
               <div className="meal-editor-main">
-                <section className="meal-editor-card">
-                  <h2>
-                    <UtensilsCrossed size={17} />
-                    {editing ? "1. Basic Information" : "General Information"}
-                  </h2>
-                  <div className="meal-basic-grid">
-                    <label className="meal-field">
-                      <span>
-                        Meal Title <b>*</b>
-                      </span>
-                      <input
-                        required
-                        minLength="2"
-                        maxLength="140"
-                        value={meal.name}
-                        onChange={(event) =>
-                          setField("name", event.target.value)
-                        }
-                        placeholder="e.g. Green Goddess Bowl"
-                      />
-                    </label>
-                    <label className="meal-field">
-                      <span>Short Subtitle / Catchphrase</span>
-                      <input
-                        maxLength="160"
-                        value={meal.subtitle}
-                        onChange={(event) =>
-                          setField("subtitle", event.target.value)
-                        }
-                        placeholder="Gluten-Free • High Fiber • Vegan"
-                      />
-                    </label>
-                    <label className="meal-field">
-                      <span>
-                        Category <b>*</b>
-                      </span>
-                      <select
-                        required
-                        value={meal.category}
-                        onChange={(event) =>
-                          setField("category", event.target.value)
-                        }
-                      >
-                        <option value="">Select category</option>
-                        {categories
-                          .filter((item) => !item.isDeleted)
-                          .map((item) => (
-                            <option key={item._id} value={item._id}>
-                              {item.name}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
-                    <label className="meal-field">
-                      <span>Preparation Time</span>
-                      <input
-                        maxLength="60"
-                        value={meal.prepTime}
-                        onChange={(event) =>
-                          setField("prepTime", event.target.value)
-                        }
-                        placeholder="15–20 mins"
-                      />
-                    </label>
-                    <label className="meal-field">
-                      <span>
-                        Base Price (₹) <b>*</b>
-                      </span>
-                      <input
-                        required
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={meal.price}
-                        onChange={(event) =>
-                          setField("price", event.target.value)
-                        }
-                        placeholder="349"
-                      />
-                    </label>
-                    <label className="meal-field">
-                      <span>Promotional Price (Optional)</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={meal.compareAtPrice}
-                        onChange={(event) =>
-                          setField("compareAtPrice", event.target.value)
-                        }
-                        placeholder="299"
-                      />
-                    </label>
-                    <label className="meal-field">
-                      <span>
-                        Available Stock <b>*</b>
-                      </span>
-                      <input
-                        required
-                        type="number"
-                        min="0"
-                        max="1000000"
-                        step="1"
-                        value={meal.stock}
-                        onChange={(event) =>
-                          setField("stock", event.target.value)
-                        }
-                        placeholder="24"
-                      />
-                    </label>
-                    <label className="meal-field meal-field-wide">
-                      <span>Description</span>
-                      <textarea
-                        required
-                        maxLength="5000"
-                        value={meal.description}
-                        onChange={(event) =>
-                          setField("description", event.target.value)
-                        }
-                        placeholder="Describe the meal, ingredients, and flavour…"
-                      />
-                    </label>
-                    <label className="meal-field meal-field-wide">
-                      <span>
-                        Ingredients &amp; Recipe Composition{" "}
-                        <small>Enter one ingredient per line.</small>
-                      </span>
-                      <textarea
-                        value={meal.highlights}
-                        onChange={(event) =>
-                          setField("highlights", event.target.value)
-                        }
-                        placeholder="Organic baby spinach&#10;Avocado&#10;Quinoa"
-                      />
-                    </label>
-                  </div>
-                  <div className="meal-form-subsection">
-                    <h3>Dietary &amp; Lifestyle Tags</h3>
-                    <div className="meal-tag-list">
-                      {dietaryOptions.map((tag) => (
-                        <label
-                          key={tag}
-                          className={
-                            meal.dietaryTags.includes(tag) ? "selected" : ""
-                          }
-                        >
-                          <input
-                            type="checkbox"
-                            checked={meal.dietaryTags.includes(tag)}
-                            onChange={() => toggleDiet(tag)}
-                          />
-                          {tag}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-                <section className="meal-editor-card meal-nutrition-card">
-                  <h2>
-                    <span className="meal-section-icon">
-                      <UtensilsCrossed size={16} />
-                    </span>
-                    Nutritional Breakdown &amp; Macros
-                  </h2>
-                  <p>Per serving portion</p>
-                  <div className="meal-nutrition-grid">
-                    {[
-                      ["calories", "Calories", "kcal"],
-                      ["protein", "Protein", "g"],
-                      ["carbs", "Carbs", "g"],
-                      ["fats", "Fats", "g"],
-                    ].map(([key, label, unit]) => (
-                      <label key={key} className="meal-nutrition-field">
-                        <span>{label}</span>
-                        <div>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100000"
-                            step="0.1"
-                            value={meal.nutrition[key]}
-                            onChange={(event) =>
-                              setField("nutrition", {
-                                ...meal.nutrition,
-                                [key]: event.target.value,
-                              })
-                            }
-                          />
-                          <small>{unit}</small>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </section>
+                <MealBasicInformation
+                  meal={meal}
+                  categories={categories}
+                  editing={editing}
+                  dietaryOptions={dietaryOptions}
+                  onChange={setField}
+                  onToggleDiet={toggleDiet}
+                />
+                <MealNutritionFields nutrition={meal.nutrition} onChange={setNutritionField} />
               </div>
               <aside className="meal-editor-side">
-                <section className="meal-editor-card">
-                  <h2>
-                    Meal Visuals{" "}
-                    <small>
-                      {existingImages.length -
-                        removeImages.length +
-                        files.length}{" "}
-                      / 5 images · min 1
-                    </small>
-                  </h2>
-                  <div className="meal-image-grid">
-                    {existingImages
-                      .filter((image) => !removeImages.includes(image.url))
-                      .map((image) => (
-                        <div className="meal-image-tile" key={image.url}>
-                          <img
-                            src={
-                              image.url.startsWith("/")
-                                ? `http://localhost:5000${image.url}`
-                                : image.url
-                            }
-                            alt={image.alt || meal.name}
-                          />
-                          <button
-                            type="button"
-                            aria-label="Remove image"
-                            onClick={() =>
-                              setRemoveImages((current) => [
-                                ...current,
-                                image.url,
-                              ])
-                            }
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    {files.map((file, index) => (
-                      <div
-                        className="meal-image-tile"
-                        key={`${file.name}-${file.lastModified}-${index}`}
-                      >
-                        <img src={filePreviews[index]} alt={file.name} />
-                        <button
-                          type="button"
-                          aria-label="Remove selected image"
-                          onClick={() =>
-                            setFiles((current) =>
-                              current.filter(
-                                (_, itemIndex) => itemIndex !== index,
-                              ),
-                            )
-                          }
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <label
-                    className={`meal-upload-box ${existingImages.length - removeImages.length + files.length >= 5 ? "disabled" : ""}`}
-                  >
-                    <Plus size={18} />
-                    <span>Add meal images</span>
-                    <small>JPG, PNG or WebP · 1–5 images required</small>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      multiple
-                      disabled={
-                        existingImages.length -
-                          removeImages.length +
-                          files.length >=
-                        5
-                      }
-                      onChange={(event) => {
-                        addImageFiles(Array.from(event.target.files || []));
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
-                  {files.length > 0 && (
-                    <small className="meal-files-selected">
-                      {files.length} new image{files.length > 1 ? "s" : ""}{" "}
-                      cropped and resized to 1200 × 1200 WebP.
-                    </small>
-                  )}
-                </section>
-                <section className="meal-editor-card">
-                  <h2>
-                    <Activity size={17} />
-                    Publishing &amp; Routing
-                  </h2>
-                  <label className="meal-stock-box">
-                    <span>
-                      <b>Available on Menu</b>
-                      <small>Enable for immediate customer ordering</small>
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={meal.isPublished}
-                      onChange={(event) =>
-                        setField("isPublished", event.target.checked)
-                      }
-                    />
-                  </label>
-                  <label className="meal-field meal-stock-input">
-                    <span>Inventory quantity</span>
-                    <input
-                      required
-                      type="number"
-                      min="0"
-                      max="1000000"
-                      step="1"
-                      value={meal.stock}
-                      onChange={(event) =>
-                        setField("stock", event.target.value)
-                      }
-                    />
-                  </label>
-                </section>
-              </aside>
-              <footer className="meal-editor-footer">
+                <MealVisuals
+                  mealName={meal.name}
+                  existingImages={existingImages}
+                  removeImages={removeImages}
+                  files={files}
+                  filePreviews={filePreviews}
+                  onRemoveExisting={removeExistingImage}
+                  onRemoveFile={removeSelectedFile}
+                  onFilesSelected={addImageFiles}
+                />
+                <MealPublishingControls meal={meal} onChange={setField} />
+              </aside>              <footer className="meal-editor-footer">
                 <span>
                   <i />
                   {meal.name && meal.category && meal.price
@@ -710,96 +319,17 @@ export default function AdminMealEditorPage() {
           )}
         </section>
       </main>
-      {cropQueue.length > 0 && (
-        <div className="meal-crop-backdrop" role="presentation">
-          <section
-            className="meal-crop-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="meal-crop-title"
-          >
-            <div className="meal-crop-heading">
-              <div>
-                <h2 id="meal-crop-title">Adjust meal photo</h2>
-                <p>
-                  {cropIndex + 1} of {cropQueue.length} · drag or pinch to frame
-                  your meal.
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Cancel image crop"
-                onClick={() => {
-                  cropperRef.current?.destroy();
-                  cropperRef.current = null;
-                  setCropperReady(false);
-                  setCropQueue([]);
-                  setCropIndex(0);
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="meal-crop-preview">
-              <img
-                ref={cropImageRef}
-                src={cropSource}
-                alt="Crop preview"
-                onLoad={initializeCropper}
-              />
-            </div>
-            <div className="meal-crop-zoom" aria-label="Photo zoom controls">
-              <button
-                type="button"
-                aria-label="Zoom out"
-                disabled={!cropperReady}
-                onClick={() => cropperRef.current?.zoom(-0.1)}
-              >
-                <Minus size={17} />
-              </button>
-              <span>Pinch or zoom</span>
-              <button
-                type="button"
-                aria-label="Zoom in"
-                disabled={!cropperReady}
-                onClick={() => cropperRef.current?.zoom(0.1)}
-              >
-                <Plus size={17} />
-              </button>
-            </div>
-            <p className="meal-crop-help">
-              Square crop · drag to reposition · pinch to zoom
-            </p>
-            <div className="meal-crop-actions">
-              <button
-                type="button"
-                className="meal-cancel-button"
-                onClick={() => {
-                  cropperRef.current?.destroy();
-                  cropperRef.current = null;
-                  setCropperReady(false);
-                  setCropQueue([]);
-                  setCropIndex(0);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="meal-save-button"
-                disabled={!cropperReady}
-                onClick={applyCurrentCrop}
-              >
-                {cropperReady
-                  ? cropIndex + 1 < cropQueue.length
-                    ? "Crop & Next"
-                    : "Crop & Add"
-                  : "Preparing crop…"}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
+      <MealCropDialog
+        cropImageRef={cropImageRef}
+        cropperRef={cropperRef}
+        source={cropSource}
+        ready={cropperReady}
+        index={cropIndex}
+        count={cropQueue.length}
+        onImageLoad={initializeCropper}
+        onCancel={cancelCrop}
+        onApply={applyCurrentCrop}
+      />
     </div>
   );
 }

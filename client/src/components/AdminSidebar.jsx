@@ -5,24 +5,22 @@ import {
   LayoutDashboard,
   LogOut,
   Tag,
-  Truck,
   UtensilsCrossed,
   Users,
 } from "lucide-react";
 
 const navigationItems = [
-  { label: "Overview", icon: LayoutDashboard },
+  { label: "Overview", icon: LayoutDashboard, to: "/admin/overview", key: "overview" },
   { label: "Meals", icon: UtensilsCrossed, to: "/admin/meals", key: "meals" },
-  { label: "Orders", icon: ClipboardList },
+  { label: "Orders", icon: ClipboardList, to: "/admin/orders", key: "orders" },
   {
     label: "Customers",
     icon: Users,
     to: "/admin/users",
     key: "customers",
   },
-  { label: "Delivery Agents", icon: Truck },
-  { label: "Coupons", icon: Tag },
-  { label: "Reports & Analytics", icon: Activity },
+  { label: "Coupons", icon: Tag, to: "/admin/coupons", key: "coupons" },
+  { label: "Reports & Analytics", icon: Activity, to: "/admin/reports", key: "reports" },
 ];
 
 export default function AdminSidebar({ activePage, onLogout }) {

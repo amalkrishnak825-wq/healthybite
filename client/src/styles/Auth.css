@@ -334,6 +334,14 @@
   font-weight: 600;
   cursor: not-allowed;
 }
+.google-login-wrap {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+.google-login-wrap > div {
+  max-width: 100%;
+}
 .google-icon {
   display: inline-flex;
   align-items: center;
@@ -909,15 +917,6 @@
   .main-navigation {
     display: none;
   }
-}
-
-.auth-login-page .google-login-wrap {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-}
-.auth-login-page .google-login-wrap > div {
-  max-width: 100%;
 }
 
 .auth-login-page .auth-card h1 {

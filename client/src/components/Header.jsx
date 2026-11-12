@@ -7,6 +7,7 @@ import {
   LogOut,
   ShoppingCart,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
@@ -107,7 +108,13 @@ export default function Header() {
         >
           Explore Meals
         </Link>
-        <Link to="/#about">About Us</Link>
+        <Link
+          to="/about"
+          className={location.pathname === "/about" ? "active" : undefined}
+          aria-current={location.pathname === "/about" ? "page" : undefined}
+        >
+          About Us
+        </Link>
       </nav>
       <div className="header-actions">
         <Link
@@ -168,6 +175,14 @@ export default function Header() {
                 >
                   <Heart size={15} />
                   Wishlist
+                </Link>
+                <Link
+                  to="/wallet"
+                  role="menuitem"
+                  onClick={() => setAccountMenuOpen(false)}
+                >
+                  <Wallet size={15} />
+                  Wallet
                 </Link>
                 <button type="button" role="menuitem" onClick={signOut}>
                   <LogOut size={15} />

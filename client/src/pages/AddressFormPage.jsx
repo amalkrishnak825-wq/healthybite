@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CircleAlert, Save } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
 import "../styles/AppPages.css";
@@ -21,6 +21,8 @@ const empty = {
 export default function AddressFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo || "/account";
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -64,7 +66,7 @@ export default function AddressFormPage() {
     try {
       if (id) await api.patch(`/addresses/${id}`, form);
       else await api.post("/addresses", form);
-      navigate("/account", {
+      navigate(returnTo, {
         state: { notice: id ? "Address updated." : "Address saved." },
       });
     } catch (error) {
@@ -80,7 +82,7 @@ export default function AddressFormPage() {
     setErrorMessage("");
     try {
       await api.delete(`/addresses/${id}`);
-      navigate("/account", { state: { notice: "Address deleted." } });
+      navigate(returnTo, { state: { notice: "Address deleted." } });
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     } finally {
@@ -99,7 +101,7 @@ export default function AddressFormPage() {
         </nav>
       </header>
       <main className="form-page narrow-form">
-        <Link className="back-link" to="/account">
+        <Link className="back-link" to={returnTo}>
           <ArrowLeft size={16} /> Back to account
         </Link>
         <div className="eyebrow">DELIVERY DETAILS</div>

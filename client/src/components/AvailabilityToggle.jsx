@@ -16,7 +16,7 @@ export default function AvailabilityToggle({
       aria-label={label}
       onClick={onToggle}
     >
-      {busy ? "Saving…" : active ? "Active" : "Deactive"}
+      {busy ? "Saving…" : active ? "Deactivate" : "Activate"}
     </button>
   );
 }

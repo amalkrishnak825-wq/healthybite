@@ -1,0 +1,41 @@
+.return-request-page { width: min(850px, calc(100% - 40px)); min-height: 55vh; margin: 0 auto; padding: 30px 0 70px; color: #21372a; }
+.return-request-heading { margin: 22px 0 20px; }
+.return-request-heading h1 { margin: 5px 0; color: #173d29; font-size: 32px; }
+.return-request-heading p { margin: 0; color: #758177; font-size: 13px; line-height: 1.5; }
+.return-request-order-ref { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding: 13px 16px; border: 1px solid #e5ece2; border-radius: 10px; background: #f8fbf6; color: #6f7b70; font-size: 11px; }
+.return-request-order-ref b { color: #284b34; }
+.return-request-form { display: grid; gap: 14px; }
+.return-request-items { display: grid; }
+.return-request-item { display: grid; grid-template-columns: minmax(0, 1fr) 125px; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid #edf1eb; }
+.return-request-item-choice { min-width: 0; display: grid; grid-template-columns: 18px 56px minmax(0, 1fr); align-items: center; gap: 11px; cursor: pointer; }
+.return-request-item-choice input { accent-color: #34744a; }
+.return-request-item-choice img { width: 56px; height: 56px; border-radius: 8px; background: #eef4eb; object-fit: cover; }
+.return-request-item-choice span { min-width: 0; display: grid; gap: 5px; }
+.return-request-item-choice b { color: #314738; font-size: 12px; }
+.return-request-item-choice small { color: #7d887e; font-size: 10px; }
+.return-request-quantity { display: grid; justify-items: start; gap: 6px; color: #657368; font-size: 10px; }
+.return-request-quantity .cart-quantity { gap: 8px; }
+.return-request-quantity .cart-quantity button { width: 28px; height: 28px; border: 1px solid #e3ebe1; border-radius: 7px; background: #fff; color: #254432; font-size: 16px; line-height: 1; cursor: pointer; }
+.return-request-quantity .cart-quantity button:disabled { background: #f3f8f1; color: #d1ddd0; cursor: not-allowed; }
+.return-request-quantity .cart-quantity span { min-width: 10px; color: #294532; font-size: 12px; text-align: center; }
+.return-request-reason { display: grid; gap: 7px; }
+.return-request-reason label { color: #294532; font-size: 13px; font-weight: 700; }
+.return-request-reason textarea { width: 100%; min-height: 100px; resize: vertical; padding: 11px 12px; border: 1px solid #dfe8dc; border-radius: 9px; color: #2a3d30; font: inherit; font-size: 12px; line-height: 1.5; }
+.return-request-reason textarea:focus { border-color: #76a47b; outline: 2px solid #76a47b2a; }
+.return-request-reason small { justify-self: end; color: #879188; font-size: 10px; }
+.return-request-submit { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; border: 0; border-radius: 9px; background: #214734; color: white; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.return-request-submit:disabled { opacity: .5; cursor: not-allowed; }
+.return-request-result { display: grid; justify-items: start; gap: 9px; padding: 23px; border: 1px solid #dce9da; border-radius: 13px; background: #fff; }
+.return-request-result > svg { color: #39734a; }
+.return-request-result h2 { margin: 0; color: #234330; font-size: 18px; }
+.return-request-result p { margin: 0; color: #68766b; font-size: 12px; line-height: 1.5; }
+.return-request-result .return-wallet-credit { color: #327748; font-weight: 700; }
+.return-request-result ul { display: grid; gap: 5px; margin: 0; padding-left: 19px; color: #435849; font-size: 11px; }
+.return-request-result a { display: inline-flex; min-height: 36px; align-items: center; margin-top: 4px; padding: 0 12px; border-radius: 7px; background: #eaf4e9; color: #315f3d; font-size: 11px; font-weight: 700; text-decoration: none; }
+@media (max-width: 540px) {
+  .return-request-page { width: calc(100% - 30px); padding-top: 22px; }
+  .return-request-heading h1 { font-size: 27px; }
+  .return-request-order-ref { align-items: flex-start; flex-direction: column; }
+  .return-request-item { grid-template-columns: 1fr; }
+  .return-request-quantity { margin-left: 29px; }
+}
