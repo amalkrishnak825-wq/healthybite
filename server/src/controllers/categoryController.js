@@ -66,7 +66,7 @@ export const listAdminCategories = asyncHandler(async (req, res) => {
     : {};
   const [categories, total] = await Promise.all([
     Category.find(filter)
-      .sort({ isDeleted: 1, isActive: -1, createdAt: -1 })
+      .sort({ isDeleted: 1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit),
     Category.countDocuments(filter),

@@ -10,6 +10,7 @@ import {
   KeyRound,
   Mail,
   Save,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
@@ -160,6 +161,23 @@ export default function ProfilePage() {
     if (uploadedSuccessfully) closeCropper();
   }
 
+  async function removeProfilePhoto() {
+    setPhotoBusy(true);
+    setFeedback(null);
+    try {
+      const response = await api.delete("/profile/photo");
+      setUser((current) => ({
+        ...current,
+        profileImage: response.data.profileImage || "",
+      }));
+      setFeedback({ type: "success", message: "Profile photo removed." });
+    } catch (error) {
+      setFeedback({ type: "error", message: getErrorMessage(error) });
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
   async function requestEmail(event) {
     event.preventDefault();
     setFeedback(null);
@@ -268,10 +286,28 @@ export default function ProfilePage() {
                   <UserRound />
                 )}
               </div>
-              <label className="outline-button upload-button">
-                <Camera size={16} /> Change photo
-                <input type="file" accept="image/*" onChange={selectPhoto} />
-              </label>
+              <div className="profile-photo-actions">
+                <label className="outline-button upload-button">
+                  <Camera size={16} /> Change photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={selectPhoto}
+                    disabled={photoBusy}
+                  />
+                </label>
+                {user?.profileImage && (
+                  <button
+                    type="button"
+                    className="danger-button profile-photo-remove"
+                    onClick={removeProfilePhoto}
+                    disabled={photoBusy}
+                  >
+                    <Trash2 size={15} />
+                    {photoBusy ? "Removing…" : "Remove photo"}
+                  </button>
+                )}
+              </div>
             </div>
             <form onSubmit={saveProfile} className="stack-form">
               <label>

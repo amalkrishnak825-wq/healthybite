@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import { syncCartCount } from "../utils/cart";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Header.css";
 
 function initials(name = "") {
@@ -44,6 +45,8 @@ export default function Header() {
   const location = useLocation();
   const [cartCount, setCartCount] = useState(readCartCount);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [failedProfileImageUrl, setFailedProfileImageUrl] = useState("");
+  const profileImageUrl = getImageUrl(user?.profileImage);
 
   async function signOut() {
     setAccountMenuOpen(false);
@@ -148,7 +151,15 @@ export default function Header() {
               aria-expanded={accountMenuOpen}
               onClick={() => setAccountMenuOpen((open) => !open)}
             >
-              {initials(user.name) || <UserRound size={17} />}
+              {profileImageUrl && profileImageUrl !== failedProfileImageUrl ? (
+                <img
+                  src={profileImageUrl}
+                  alt=""
+                  onError={() => setFailedProfileImageUrl(profileImageUrl)}
+                />
+              ) : (
+                initials(user.name) || <UserRound size={17} />
+              )}
             </button>
             {accountMenuOpen && (
               <div className="account-menu" role="menu">

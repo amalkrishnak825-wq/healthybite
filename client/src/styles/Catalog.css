@@ -1036,6 +1036,21 @@
   color: #fff;
   box-shadow: 0 1px 2px #0000000d;
 }
+.meal-category-tabs button.meal-category-page-arrow {
+  display: inline-flex;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #dce7dc;
+  background: #fff;
+  color: #244735;
+}
+.meal-category-tabs button.meal-category-page-arrow:hover {
+  background: #e3f2e4;
+}
 .meal-menu-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -56,10 +56,9 @@ export default function AdminMealsPage() {
   const orderedCategories = useMemo(
     () =>
       [...categories].sort((left, right) => {
-        const statusRank = (category) =>
-          category.isDeleted ? 2 : category.isActive === false ? 1 : 0;
+        const deletedRank = (category) => (category.isDeleted ? 1 : 0);
         return (
-          statusRank(left) - statusRank(right) ||
+          deletedRank(left) - deletedRank(right) ||
           new Date(right.createdAt).getTime() -
             new Date(left.createdAt).getTime()
         );

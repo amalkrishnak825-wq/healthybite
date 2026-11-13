@@ -1,6 +1,15 @@
 .account-link {
   font-size: 12px;
   font-weight: 700;
+  overflow: hidden;
+  padding: 0;
+}
+.account-link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .wishlist-header-link {

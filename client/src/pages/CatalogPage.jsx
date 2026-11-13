@@ -37,6 +37,7 @@ export default function CatalogPage() {
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [wishlistBusyId, setWishlistBusyId] = useState("");
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [categoryPage, setCategoryPage] = useState(0);
   const focusRevision = useFocusRefresh();
   const search = params.get("search") || "";
   const category = params.get("category") || "";
@@ -204,11 +205,21 @@ export default function CatalogPage() {
       setWishlistBusyId("");
     }
   }
+  const categoryPageSize = 7;
+  const categoryPageCount = Math.ceil(
+    orderedCategories.length / categoryPageSize,
+  );
+  const visibleCategoryPage = Math.min(
+    categoryPage,
+    Math.max(0, categoryPageCount - 1),
+  );
+  const visibleCategories = orderedCategories.slice(
+    visibleCategoryPage * categoryPageSize,
+    (visibleCategoryPage + 1) * categoryPageSize,
+  );
   const tabs = [
     { label: "All Meals" },
-    ...orderedCategories
-      .filter((item) => !/protein meals/i.test(item.name))
-      .map((item) => ({ ...item, label: item.name })),
+    ...visibleCategories.map((item) => ({ ...item, label: item.name })),
     ...(!orderedCategories.some((item) => /protein meals/i.test(item.name))
       ? dietaryTabs
       : []),
@@ -337,6 +348,16 @@ export default function CatalogPage() {
           </div>
         </section>
         <nav className="meal-category-tabs" aria-label="Meal categories">
+          {visibleCategoryPage > 0 && categoryPageCount > 1 && (
+            <button
+              type="button"
+              className="meal-category-page-arrow"
+              aria-label="Show previous meal categories"
+              onClick={() => setCategoryPage((current) => current - 1)}
+            >
+              <ChevronLeft size={17} />
+            </button>
+          )}
           {tabs.map((item) => (
             <button
               key={item._id || item.tag || item.label}
@@ -348,6 +369,17 @@ export default function CatalogPage() {
               {item.label}
             </button>
           ))}
+          {categoryPageCount > 1 &&
+            visibleCategoryPage < categoryPageCount - 1 && (
+              <button
+                type="button"
+                className="meal-category-page-arrow"
+                aria-label="Show more meal categories"
+                onClick={() => setCategoryPage((current) => current + 1)}
+              >
+                <ChevronRight size={17} />
+              </button>
+            )}
         </nav>
         {error && (
           <div className="catalog-error" role="alert">

@@ -579,6 +579,24 @@
   gap: 13px;
   margin-bottom: 20px;
 }
+.profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.profile-photo-remove {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.profile-photo-remove:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 .avatar.large {
   width: 58px;
   height: 58px;
