@@ -96,6 +96,13 @@
   flex-wrap: wrap;
   gap: 5px;
 }
+.meal-admin-table .category-actions {
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+.meal-admin-table td:last-child {
+  white-space: nowrap;
+}
 .catalog-availability-toggle {
   min-height: 28px;
   padding: 5px 8px;
@@ -787,6 +794,14 @@
 }
 .meal-table-status.inactive i {
   background: #a0aaa2;
+}
+.meal-stock-count {
+  color: #345b40;
+  font-size: 12px;
+  font-weight: 700;
+}
+.meal-stock-count.out-of-stock {
+  color: #ad352e;
 }
 .meal-old-price {
   display: block;

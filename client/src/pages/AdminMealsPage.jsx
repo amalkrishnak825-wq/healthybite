@@ -569,6 +569,7 @@ export default function AdminMealsPage() {
                     <th>CATEGORY</th>
                     <th>PRICE</th>
                     <th>CALORIES</th>
+                    <th>QUANTITY</th>
                     <th>MENU STATUS</th>
                     <th>ACTIONS</th>
                   </tr>
@@ -619,6 +620,13 @@ export default function AdminMealsPage() {
                           {product.nutrition?.calories
                             ? `${product.nutrition.calories} kcal`
                             : "—"}
+                        </td>
+                        <td>
+                          <span
+                            className={`meal-stock-count${product.stock === 0 ? " out-of-stock" : ""}`}
+                          >
+                            {product.stock}
+                          </span>
                         </td>
                         <td>
                           <div className="meal-status-cell">
@@ -674,7 +682,7 @@ export default function AdminMealsPage() {
                   })}
                   {!products.length && (
                     <tr>
-                      <td colSpan="6" className="admin-empty-row">
+                      <td colSpan="7" className="admin-empty-row">
                         No meals found.
                       </td>
                     </tr>
