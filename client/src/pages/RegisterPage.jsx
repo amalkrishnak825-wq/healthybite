@@ -7,30 +7,9 @@ import AuthField from "../components/AuthField";
 import AuthButton from "../components/AuthButton";
 import GoogleButton from "../components/GoogleButton";
 import PasswordMeters, { passwordChecks } from "../components/PasswordMeters";
+import { getEmailError, getNameError } from "../utils/validation";
 import { ArrowRight, CircleAlert, Leaf } from "lucide-react";
 import "../styles/AuthFormError.css";
-
-function getNameError(value, required = false) {
-  const name = value.trim();
-  if (!name) return required ? "Please enter your name." : "";
-  if (name.length < 2 || name.length > 80)
-    return "Your name must be between 2 and 80 characters.";
-  if (!/^[\p{L}\p{M}]+(?:[ '\u2019.-][\p{L}\p{M}]+)*$/u.test(name))
-    return "Use letters only. Spaces, hyphens, apostrophes, and periods are allowed.";
-  return "";
-}
-
-function getEmailError(value, required = false) {
-  const email = value.trim();
-  if (!email) return required ? "Please enter your email address." : "";
-  if (
-    !/^[^\s@]{2,}@[a-z\d](?:[a-z\d-]*[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]*[a-z\d])?)+$/i.test(
-      email,
-    )
-  )
-    return "Enter a valid email with at least 2 characters before @.";
-  return "";
-}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -56,7 +35,7 @@ export default function RegisterPage() {
 
     const liveError =
       name === "name"
-        ? getNameError(value)
+        ? getNameError(value, { max: 80 })
         : name === "email"
           ? getEmailError(value)
           : "";
@@ -73,7 +52,7 @@ export default function RegisterPage() {
 
     const nextErrors = {};
 
-    const nameError = getNameError(form.name, true);
+    const nameError = getNameError(form.name, { required: true, max: 80 });
     const emailError = getEmailError(form.email, true);
     if (nameError) nextErrors.name = nameError;
     if (emailError) nextErrors.email = emailError;

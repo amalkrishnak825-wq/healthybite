@@ -58,8 +58,8 @@ export default function CheckoutPage() {
         const selected = saved.find((item) => item.isDefault)?._id || saved[0]?._id || "";
         setAddressId(selected);
         if (!cartResponse.data.items?.length) navigate("/cart", { replace: true });
-        else if (selected) {
-          api.post("/orders/quote", { addressId: selected, couponCode: "" })
+        else if (!selected) {
+          api.post("/orders/quote", { couponCode: "" })
             .then((response) => { if (active) setQuote(response.data); })
             .catch((failure) => { if (active) setError(getErrorMessage(failure)); });
         }
@@ -187,7 +187,7 @@ export default function CheckoutPage() {
               </section>
               <section className="checkout-panel">
                 <div className="checkout-panel-heading"><div><Tag size={18} /><h2>Have a Coupon Code?</h2></div></div>
-                <form className="checkout-coupon-form" onSubmit={applyCoupon}><div className="checkout-coupon-input-wrap"><input aria-label="Coupon code" aria-invalid={couponInvalid} className={couponInvalid ? "invalid" : ""} placeholder="Enter coupon code" value={couponInput} onChange={(event) => { setCouponInput(event.target.value); setCouponInvalid(false); setCouponError(""); }} />{couponError && <span className="checkout-coupon-error" role="alert">{couponError}</span>}</div><button type="submit" disabled={!addressId || !couponInput.trim()}>{couponCode && couponInput.trim().toUpperCase() !== couponCode ? "Update" : "Apply"}</button>{couponCode && <button type="button" className="checkout-remove-coupon" onClick={() => { setCouponInput(""); setCouponCode(""); setCouponInvalid(false); setCouponError(""); }}>Remove</button>}</form>
+                <form className="checkout-coupon-form" onSubmit={applyCoupon}><div className="checkout-coupon-input-wrap"><input aria-label="Coupon code" aria-invalid={couponInvalid} className={couponInvalid ? "invalid" : ""} placeholder="Enter coupon code" value={couponInput} onChange={(event) => { setCouponInput(event.target.value); setCouponInvalid(false); setCouponError(""); }} />{couponError && <span className="checkout-coupon-error" role="alert">{couponError}</span>}</div><button type="submit" disabled={!quote || !couponInput.trim()}>{couponCode && couponInput.trim().toUpperCase() !== couponCode ? "Update" : "Apply"}</button>{couponCode && <button type="button" className="checkout-remove-coupon" onClick={() => { setCouponInput(""); setCouponCode(""); setCouponInvalid(false); setCouponError(""); }}>Remove</button>}</form>
               </section>
               <section className="checkout-panel">
                 <div className="checkout-panel-heading"><div><h2>Payment method</h2></div></div>

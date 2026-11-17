@@ -17,6 +17,8 @@ import api, { getErrorMessage } from "../api/axios";
 import AdminSidebar from "../components/AdminSidebar";
 import { getImageUrl } from "../utils/imageUrl";
 import { getInitials, readAdminUser } from "../utils/admin";
+import FieldError from "../components/FieldError";
+import { getIndianPhoneError, getNameError } from "../utils/validation";
 import useAdminErrorToast from "../utils/useAdminErrorToast";
 import "../styles/Admin.css";
 import "../styles/AdminEdit.css";
@@ -29,6 +31,7 @@ export default function AdminCustomerPage() {
   const [confirm, setConfirm] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", phone: "" });
+  const [editErrors, setEditErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState("");
   const admin = readAdminUser();
@@ -91,6 +94,12 @@ export default function AdminCustomerPage() {
   }
   async function saveCustomer(event) {
     event.preventDefault();
+    const nextErrors = {
+      name: getNameError(editForm.name, { required: true, max: 50 }),
+      phone: getIndianPhoneError(editForm.phone, false),
+    };
+    setEditErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
     setBusy(true);
     setPageError("");
     try {
@@ -302,6 +311,7 @@ export default function AdminCustomerPage() {
           <form
             className="admin-confirm-modal edit-customer-modal"
             onSubmit={saveCustomer}
+            noValidate
           >
             <button
               type="button"
@@ -316,30 +326,39 @@ export default function AdminCustomerPage() {
             <label>
               Full name
               <input
-                required
-                minLength="2"
                 maxLength="50"
                 value={editForm.name}
-                onChange={(event) =>
-                  setEditForm({ ...editForm, name: event.target.value })
-                }
+                aria-invalid={Boolean(editErrors.name)}
+                aria-describedby={editErrors.name ? "admin-customer-name-error" : undefined}
+                onChange={(event) => {
+                  const name = event.target.value;
+                  setEditForm((current) => ({ ...current, name }));
+                  setEditErrors((current) => ({
+                    ...current,
+                    name: getNameError(name, { required: true, max: 50 }),
+                  }));
+                }}
               />
+              <FieldError id="admin-customer-name-error" className="profile-field-error" message={editErrors.name} />
             </label>
             <label>
               Phone number
               <input
-                pattern="[6-9][0-9]{9}"
-                title="Enter a valid 10-digit Indian mobile number"
                 inputMode="numeric"
                 maxLength="10"
                 value={editForm.phone}
-                onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    phone: event.target.value.replace(/\D/g, "").slice(0, 10),
-                  })
-                }
+                aria-invalid={Boolean(editErrors.phone)}
+                aria-describedby={editErrors.phone ? "admin-customer-phone-error" : undefined}
+                onChange={(event) => {
+                  const phone = event.target.value.replace(/\D/g, "").slice(0, 10);
+                  setEditForm((current) => ({ ...current, phone }));
+                  setEditErrors((current) => ({
+                    ...current,
+                    phone: phone.length === 10 ? getIndianPhoneError(phone, false) : "",
+                  }));
+                }}
               />
+              <FieldError id="admin-customer-phone-error" className="profile-field-error" message={editErrors.phone} />
             </label>
             <div className="confirm-actions">
               <button

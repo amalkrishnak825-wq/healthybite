@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
 import { getImageUrl } from "../utils/imageUrl";
+import FieldError from "../components/FieldError";
+import { getIndianPhoneError, getNameError } from "../utils/validation";
 import { useAuth } from "../context/AuthContext";
 import "cropperjs/dist/cropper.css";
 import "../styles/AppPages.css";
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
+  const [profileErrors, setProfileErrors] = useState({});
   const [newEmail, setNewEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [emailSent, setEmailSent] = useState(false);
@@ -53,6 +56,12 @@ export default function ProfilePage() {
 
   async function saveProfile(event) {
     event.preventDefault();
+    const nextErrors = {
+      name: getNameError(name, { required: true, max: 50 }),
+      phone: getIndianPhoneError(phone),
+    };
+    setProfileErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
     setBusy(true);
     setFeedback(null);
     try {
@@ -309,30 +318,43 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            <form onSubmit={saveProfile} className="stack-form">
-              <label>
+            <form onSubmit={saveProfile} className="stack-form" noValidate>
+              <label className={profileErrors.name ? "settings-field-invalid" : ""}>
                 Full name
                 <input
-                  required
-                  minLength="2"
-                  maxLength="50"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  maxLength="50"
+                  aria-invalid={Boolean(profileErrors.name)}
+                  aria-describedby={profileErrors.name ? "profile-name-error" : undefined}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setName(value);
+                    setProfileErrors((current) => ({
+                      ...current,
+                      name: getNameError(value, { required: true, max: 50 }),
+                    }));
+                  }}
                 />
+                <FieldError id="profile-name-error" className="profile-field-error" message={profileErrors.name} />
               </label>
-              <label>
+              <label className={profileErrors.phone ? "settings-field-invalid" : ""}>
                 Phone number
                 <input
-                  required
-                  pattern="[6-9][0-9]{9}"
-                  title="Enter a valid 10-digit Indian mobile number"
                   inputMode="numeric"
                   maxLength="10"
                   value={phone}
-                  onChange={(event) =>
-                    setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))
-                  }
+                  aria-invalid={Boolean(profileErrors.phone)}
+                  aria-describedby={profileErrors.phone ? "profile-phone-error" : undefined}
+                  onChange={(event) => {
+                    const value = event.target.value.replace(/\D/g, "").slice(0, 10);
+                    setPhone(value);
+                    setProfileErrors((current) => ({
+                      ...current,
+                      phone: value.length === 10 ? getIndianPhoneError(value) : "",
+                    }));
+                  }}
                 />
+                <FieldError id="profile-phone-error" className="profile-field-error" message={profileErrors.phone} />
               </label>
               <label>
                 Email address

@@ -1,6 +1,11 @@
 import Address from "../models/Address.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import {
+  isValidIndianPhone,
+  isValidIndianPincode,
+  isValidPersonName,
+} from "../utils/inputValidation.js";
 
 const addressFields = [
   "type",
@@ -43,16 +48,19 @@ const validateAddress = (data, partial = false) => {
       }
     }
   }
-  if (
-    data.phone !== undefined &&
-    !/^[6-9]\d{9}$/.test(String(data.phone).trim())
-  )
+  if (data.fullName !== undefined && !isValidPersonName(data.fullName, { max: 80 })) {
+    throw new AppError("Enter a valid name using letters and basic punctuation.", 400);
+  }
+  if (data.phone !== undefined && !isValidIndianPhone(String(data.phone).trim()))
     throw new AppError("Enter a valid 10-digit Indian mobile number.", 400);
   if (
     data.pincode !== undefined &&
-    !/^\d{6}$/.test(String(data.pincode).trim())
+    !isValidIndianPincode(String(data.pincode).trim())
   )
-    throw new AppError("Enter a valid 6-digit PIN code.", 400);
+    throw new AppError(
+      "Enter a valid 6-digit PIN code starting with 1-9.",
+      400,
+    );
   if (data.type !== undefined && !["Home", "Work", "Other"].includes(data.type))
     throw new AppError("Address type must be Home, Work, or Other.", 400);
 };

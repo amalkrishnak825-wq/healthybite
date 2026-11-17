@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CircleAlert, Save } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
+import FieldError from "../components/FieldError";
+import {
+  getIndianPhoneError,
+  getIndianPincodeError,
+  getNameError,
+} from "../utils/validation";
 import "../styles/AppPages.css";
 import "../styles/AuthFormError.css";
 
@@ -26,6 +32,36 @@ export default function AddressFormPage() {
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [touched, setTouched] = useState({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [phoneErrorDismissed, setPhoneErrorDismissed] = useState(false);
+  const [pincodeErrorDismissed, setPincodeErrorDismissed] = useState(false);
+  const fullNameError =
+    touched.fullName || submitAttempted || form.fullName
+      ? getNameError(form.fullName, { required: true, max: 80 })
+      : "";
+  const phoneError =
+    touched.phone || submitAttempted || form.phone.length === 10
+      ? getIndianPhoneError(form.phone)
+      : "";
+  const pincodeError =
+    touched.pincode || submitAttempted
+      ? getIndianPincodeError(form.pincode)
+      : "";
+  const visiblePhoneError = phoneErrorDismissed ? "" : phoneError;
+  const visiblePincodeError = pincodeErrorDismissed ? "" : pincodeError;
+
+  useEffect(() => {
+    if (!phoneError) return undefined;
+    const timeout = window.setTimeout(() => setPhoneErrorDismissed(true), 5500);
+    return () => window.clearTimeout(timeout);
+  }, [phoneError, form.phone]);
+
+  useEffect(() => {
+    if (!pincodeError) return undefined;
+    const timeout = window.setTimeout(() => setPincodeErrorDismissed(true), 5500);
+    return () => window.clearTimeout(timeout);
+  }, [pincodeError, form.pincode]);
 
   useEffect(() => {
     if (!id) return;
@@ -61,8 +97,19 @@ export default function AddressFormPage() {
 
   async function submit(event) {
     event.preventDefault();
-    setBusy(true);
     setErrorMessage("");
+    setPhoneErrorDismissed(false);
+    setPincodeErrorDismissed(false);
+    setSubmitAttempted(true);
+    if (
+      getNameError(form.fullName, { required: true, max: 80 }) ||
+      getIndianPhoneError(form.phone) ||
+      getIndianPincodeError(form.pincode)
+    ) {
+      return;
+    }
+
+    setBusy(true);
     try {
       if (id) await api.patch(`/addresses/${id}`, form);
       else await api.post("/addresses", form);
@@ -74,6 +121,31 @@ export default function AddressFormPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleFormKeyDown(event) {
+    if (event.key !== "Enter") return;
+    const currentField = event.target;
+    if (
+      !currentField.matches("input:not([type='checkbox']):not([type='hidden']), select")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    const fields = Array.from(
+      event.currentTarget.querySelectorAll(
+        "input:not([type='checkbox']):not([type='hidden']), select",
+      ),
+    ).filter((field) => !field.disabled);
+    const currentIndex = fields.indexOf(currentField);
+
+    if (currentIndex === fields.length - 1) {
+      event.currentTarget.requestSubmit();
+      return;
+    }
+
+    fields[currentIndex + 1]?.focus();
   }
 
   async function remove() {
@@ -110,7 +182,11 @@ export default function AddressFormPage() {
           Make sure your good things know where to find you.
         </p>
         <section className="panel settings-panel">
-          <form className="stack-form address-form" onSubmit={submit}>
+          <form
+            className="stack-form address-form"
+            onSubmit={submit}
+            onKeyDown={handleFormKeyDown}
+          >
             {errorMessage && (
               <div className="auth-form-error address-form-error" role="alert">
                 <CircleAlert size={17} />
@@ -125,29 +201,41 @@ export default function AddressFormPage() {
                 <option>Other</option>
               </select>
             </label>
-            <label>
+            <label className={fullNameError ? "address-field-invalid" : ""}>
               Full name
               <input
                 required
                 value={form.fullName}
                 onChange={field("fullName")}
+                aria-invalid={Boolean(fullNameError)}
+                aria-describedby={fullNameError ? "address-name-error" : undefined}
+                onBlur={() =>
+                  setTouched((current) => ({ ...current, fullName: true }))
+                }
               />
+              <FieldError id="address-name-error" className="address-field-error" message={fullNameError} />
             </label>
-            <label>
+            <label className={phoneError ? "address-field-invalid" : ""}>
               Phone number
               <input
-                required
-                pattern="[6-9][0-9]{9}"
                 inputMode="numeric"
                 maxLength="10"
                 value={form.phone}
+                aria-invalid={Boolean(phoneError)}
+                aria-describedby={visiblePhoneError ? "address-phone-error" : undefined}
                 onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    phone: event.target.value.replace(/\D/g, "").slice(0, 10),
-                  }))
+                  {
+                    setErrorMessage("");
+                    setPhoneErrorDismissed(false);
+                    setForm((current) => ({
+                      ...current,
+                      phone: event.target.value.replace(/\D/g, "").slice(0, 10),
+                    }));
+                  }
                 }
+                onBlur={() => setTouched((current) => ({ ...current, phone: true }))}
               />
+              <FieldError id="address-phone-error" className="address-field-error" message={visiblePhoneError} />
             </label>
             <label>
               House / flat / building
@@ -173,14 +261,25 @@ export default function AddressFormPage() {
               State
               <input required value={form.state} onChange={field("state")} />
             </label>
-            <label>
+            <label className={pincodeError ? "address-field-invalid" : ""}>
               PIN code
               <input
-                required
-                pattern="[0-9]{6}"
+                inputMode="numeric"
+                maxLength="6"
                 value={form.pincode}
-                onChange={field("pincode")}
+                aria-invalid={Boolean(pincodeError)}
+                aria-describedby={visiblePincodeError ? "address-pincode-error" : undefined}
+                onChange={(event) => {
+                  setErrorMessage("");
+                  setPincodeErrorDismissed(false);
+                  setForm((current) => ({
+                    ...current,
+                    pincode: event.target.value.replace(/\D/g, "").slice(0, 6),
+                  }));
+                }}
+                onBlur={() => setTouched((current) => ({ ...current, pincode: true }))}
               />
+              <FieldError id="address-pincode-error" className="address-field-error" message={visiblePincodeError} />
             </label>
             <label className="check-label">
               <input

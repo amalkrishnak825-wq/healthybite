@@ -11,11 +11,14 @@ import {
   Heart,
   Leaf,
   MapPin,
+  Pencil,
   Plus,
+  Trash2,
   UserRound,
   Wallet,
 } from "lucide-react";
 import AuthLayout from "../components/AuthLayout";
+import ActionConfirmation from "../components/ActionConfirmation";
 import "../styles/AppPages.css";
 import "../styles/ProfileGuest.css";
 import "../styles/AuthFormError.css";
@@ -26,6 +29,14 @@ export default function AccountPage() {
   const location = useLocation();
   const [addresses, setAddresses] = useState([]);
   const [notice, setNotice] = useState(location.state?.notice || "");
+  const [deletingAddressId, setDeletingAddressId] = useState(null);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 1000);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
@@ -57,6 +68,20 @@ export default function AccountPage() {
       setNotice("Default address updated.");
     } catch {
       setNotice("Could not update the default address. Please try again.");
+    }
+  }
+  async function removeAddress(addressId) {
+    setDeletingAddressId(addressId);
+    try {
+      await api.delete(`/addresses/${addressId}`);
+      const response = await api.get("/addresses");
+      setAddresses(response.data.addresses || []);
+      setNotice("Address deleted.");
+    } catch {
+      setNotice("Could not delete this address. Please try again.");
+    } finally {
+      setDeletingAddressId(null);
+      setAddressToDelete(null);
     }
   }
   async function signOut() {
@@ -230,9 +255,21 @@ export default function AccountPage() {
                           Make default
                         </button>
                       )}
-                      <Link to={`/account/addresses/${address._id}/edit`}>
-                        Edit address
+                      <Link
+                        className="address-edit-button"
+                        to={`/account/addresses/${address._id}/edit`}
+                      >
+                        <Pencil size={13} /> Edit
                       </Link>
+                      <button
+                        className="address-delete-button"
+                        type="button"
+                        onClick={() => setAddressToDelete(address)}
+                        disabled={deletingAddressId === address._id}
+                      >
+                        <Trash2 size={13} />
+                        {deletingAddressId === address._id ? "Deleting…" : "Delete"}
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -248,6 +285,20 @@ export default function AccountPage() {
           </section>
         </div>
       </main>
+      <ActionConfirmation
+        open={Boolean(addressToDelete)}
+        title="Delete this address?"
+        message={
+          addressToDelete
+            ? `Are you sure you want to delete your ${addressToDelete.type || "saved"} address? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete address"
+        busy={Boolean(deletingAddressId)}
+        variant="danger"
+        onCancel={() => setAddressToDelete(null)}
+        onConfirm={() => removeAddress(addressToDelete._id)}
+      />
     </div>
   );
 }

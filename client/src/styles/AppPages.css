@@ -680,6 +680,18 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+.address-form label.address-field-invalid input {
+  border-color: #cf4e45;
+  background: #fff9f8;
+  box-shadow: 0 0 0 2px #cf4e451a;
+}
+.address-form .address-field-error {
+  margin-top: 0;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
 .address-form label:nth-child(4),
 .address-form label:nth-child(5),
 .address-form label:nth-child(6),
@@ -1312,9 +1324,16 @@ td {
 .address-item-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.address-item-actions button {
+.address-item-actions button,
+.address-item-actions .address-edit-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid #d9e5d3;
   border-radius: 6px;
   background: #f3f7f0;
@@ -1322,17 +1341,30 @@ td {
   color: #42653d;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
+  text-decoration: none;
   transition:
     background 0.15s,
     border-color 0.15s;
 }
-.address-item-actions button:hover {
+.address-item-actions button:hover,
+.address-item-actions .address-edit-button:hover {
   background: #e9f1e4;
   border-color: #b9cdb0;
 }
-.address-item-actions a:hover {
-  text-decoration: underline;
+.address-item-actions .address-delete-button {
+  border-color: #efceca;
+  background: #fff7f6;
+  color: #b33b32;
+}
+.address-item-actions .address-delete-button:hover:not(:disabled) {
+  border-color: #e6ada6;
+  background: #ffefed;
+}
+.address-item-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .profile-field-error {

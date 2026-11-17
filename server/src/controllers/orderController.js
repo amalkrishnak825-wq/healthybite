@@ -11,17 +11,19 @@ import { paginationMetadata, parsePagination } from "../utils/query.js";
 import { creditWallet, debitWallet, getOrCreateWallet } from "../utils/wallet.js";
 
 async function getCheckoutData(userId, addressId, couponCode = "", options = {}) {
+  const { requireAddress = true, ...pricingOptions } = options;
   const [cart, address] = await Promise.all([
     Cart.findOne({ user: userId }).populate({ path: "items.product", populate: { path: "category", select: "isDeleted isActive" } }),
-    Address.findOne({ _id: addressId, user: userId }),
+    addressId ? Address.findOne({ _id: addressId, user: userId }) : null,
   ]);
-  if (!address) throw new AppError("Choose a saved delivery address.", 400);
+  if ((requireAddress || addressId) && !address)
+    throw new AppError("Choose a saved delivery address.", 400);
   if (!cart?.items.length) throw new AppError("Your cart is empty.", 400);
   const items = cart.items.filter((item) => item.product);
   if (items.some((item) => !isOrderableProduct(item.product, item.quantity))) {
     throw new AppError("A meal is unavailable or its stock changed. Review your cart.", 409);
   }
-  const pricing = await priceOrder(items, couponCode, userId, options);
+  const pricing = await priceOrder(items, couponCode, userId, pricingOptions);
   return { items, address, pricing };
 }
 
@@ -58,10 +60,15 @@ const snapshotItems = (items) => items.map(({ product, quantity }) => ({
 const publicOrder = (order) => ({ success: true, order });
 
 export const quoteCheckout = asyncHandler(async (req, res) => {
-  const { items, address, pricing } = await getCheckoutData(req.user._id, req.body.addressId, req.body.couponCode);
+  const { items, address, pricing } = await getCheckoutData(
+    req.user._id,
+    req.body.addressId,
+    req.body.couponCode,
+    { requireAddress: false },
+  );
   res.json({
     success: true,
-    address: address._id,
+    address: address?._id || null,
     items: items.map(({ product, quantity }) => ({ productId: product._id, name: product.name, image: product.images?.[0]?.url || "", unitPrice: product.price, quantity, lineTotal: product.price * quantity })),
     pricing,
   });

@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Address from "../models/Address.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { isValidIndianPhone, isValidPersonName } from "../utils/inputValidation.js";
 import {
   escapeRegex,
   paginationMetadata,
@@ -80,15 +81,13 @@ export const updateCustomer = asyncHandler(async (req, res) => {
     throw new AppError("Provide a customer name or phone number.", 400);
   if (
     name !== undefined &&
-    (typeof name !== "string" ||
-      name.trim().length < 2 ||
-      name.trim().length > 50)
+    !isValidPersonName(name, { max: 50 })
   )
     throw new AppError("Name must be between 2 and 50 characters.", 400);
   if (
     phone !== undefined &&
     phone !== "" &&
-    !/^[6-9]\d{9}$/.test(String(phone).trim())
+    !isValidIndianPhone(String(phone).trim())
   )
     throw new AppError("Enter a valid 10-digit Indian mobile number.", 400);
   const customer = await User.findOne({ _id: req.params.id, role: "customer" });

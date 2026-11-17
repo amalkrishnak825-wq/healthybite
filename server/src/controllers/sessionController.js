@@ -5,9 +5,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendEmail.js";
 import { generateOtp, hashOtp, otpMeta, verifyOtp } from "../utils/otp.js";
 import { signToken, sendTokenCookie } from "../utils/token.js";
-
-const registrationNamePattern =
-  /^[\p{L}\p{M}]+(?:[ '\u2019.-][\p{L}\p{M}]+)*$/u;
+import { isValidPersonName } from "../utils/inputValidation.js";
 const registrationEmailPattern =
   /^[^\s@]{2,}@[a-z\d](?:[a-z\d-]*[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]*[a-z\d])?)+$/i;
 
@@ -29,9 +27,7 @@ export const register = asyncHandler(async (req, res) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (
-    normalizedName.length < 2 ||
-    normalizedName.length > 80 ||
-    !registrationNamePattern.test(normalizedName)
+    !isValidPersonName(normalizedName, { max: 80 })
   ) {
     throw new AppError(
       "Name must be 2–80 characters and contain letters only, with spaces, hyphens, apostrophes, or periods allowed.",

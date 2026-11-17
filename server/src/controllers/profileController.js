@@ -9,6 +9,7 @@ import {
   uploadProfilePhoto,
 } from "../config/cloudinary.js";
 import validator from "validator";
+import { isValidIndianPhone, isValidPersonName } from "../utils/inputValidation.js";
 
 const deleteOldProfilePhoto = async (photoPath) => {
   if (photoPath?.publicId) {
@@ -38,11 +39,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   }
 
   if (name !== undefined) {
-    if (
-      typeof name !== "string" ||
-      name.trim().length < 2 ||
-      name.trim().length > 50
-    ) {
+    if (!isValidPersonName(name, { max: 50 })) {
       throw new AppError("Name must be between 2 and 50 characters.", 400);
     }
 
@@ -50,7 +47,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   }
 
   if (phone !== undefined) {
-    if (typeof phone !== "string" || !/^[6-9]\d{9}$/.test(phone.trim())) {
+    if (!isValidIndianPhone(phone)) {
       throw new AppError("Enter a valid 10-digit Indian mobile number.", 400);
     }
     req.user.phone = phone.trim();
