@@ -16,6 +16,7 @@ import ProductCard from "../components/ProductCard";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Catalog.css";
 import "../styles/ProductDetail.css";
 
@@ -143,7 +144,7 @@ export default function ProductPage() {
               <img
                 src={
                   images[imageIndex]?.url?.startsWith("/")
-                    ? `http://localhost:5000${images[imageIndex].url}`
+                    ? getImageUrl(images[imageIndex].url)
                     : images[imageIndex]?.url
                 }
                 alt={images[imageIndex]?.alt || product.name}
@@ -179,7 +180,7 @@ export default function ProductPage() {
                   <img
                     src={
                       image.url.startsWith("/")
-                        ? `http://localhost:5000${image.url}`
+                        ? getImageUrl(image.url)
                         : image.url
                     }
                     alt={image.alt || product.name}

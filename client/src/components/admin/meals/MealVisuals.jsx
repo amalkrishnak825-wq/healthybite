@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react";
+import { getImageUrl } from "../../../utils/imageUrl";
 
 export default function MealVisuals({
   mealName,
@@ -20,7 +21,7 @@ export default function MealVisuals({
       <div className="meal-image-grid">
         {visibleImages.map((image) => (
           <div className="meal-image-tile" key={image.url}>
-            <img src={image.url.startsWith("/") ? `http://localhost:5000${image.url}` : image.url} alt={image.alt || mealName} />
+            <img src={getImageUrl(image.url)} alt={image.alt || mealName} />
             <button type="button" aria-label="Remove image" onClick={() => onRemoveExisting(image.url)}>
               <X size={14} />
             </button>

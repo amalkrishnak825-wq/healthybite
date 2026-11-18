@@ -3,6 +3,7 @@ import { Heart, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
+import { getImageUrl } from "../utils/imageUrl";
 import ActionConfirmation from "./ActionConfirmation";
 import greenGoddessBowl from "../assets/meal-menu/green-goddess-bowl.png";
 import grilledProteinBowl from "../assets/meal-menu/grilled-protein-bowl.png";
@@ -38,7 +39,7 @@ export default function ProductCard({
   const uploadedImage = product.images?.[0]?.url;
   const image = uploadedImage
     ? uploadedImage.startsWith("/")
-      ? `http://localhost:5000${uploadedImage}`
+      ? getImageUrl(uploadedImage)
       : uploadedImage
     : fallback || "/login-bg.jpg";
   const tags = (product.dietaryTags || []).slice(0, 3);

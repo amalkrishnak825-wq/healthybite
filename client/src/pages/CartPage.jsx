@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Catalog.css";
 
 export default function CartPage() {
@@ -76,7 +77,7 @@ export default function CartPage() {
                       src={
                         product.images?.[0]?.url
                           ? product.images[0].url.startsWith("/")
-                            ? `http://localhost:5000${product.images[0].url}`
+                            ? getImageUrl(product.images[0].url)
                             : product.images[0].url
                           : "/login-bg.jpg"
                       }

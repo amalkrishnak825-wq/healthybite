@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api, { getErrorMessage } from "../api/axios";
+import { getImageUrl } from "../utils/imageUrl";
 import ActionConfirmation from "../components/ActionConfirmation";
 import AdminPageLayout from "../components/AdminPageLayout";
 import AdminPageHeader from "../components/AdminPageHeader";
@@ -589,7 +590,7 @@ export default function AdminMealsPage() {
                               <img
                                 src={
                                   product.images[0].url.startsWith("/")
-                                    ? `http://localhost:5000${product.images[0].url}`
+                                    ? getImageUrl(product.images[0].url)
                                     : product.images[0].url
                                 }
                                 alt=""

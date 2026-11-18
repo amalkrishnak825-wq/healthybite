@@ -7,6 +7,7 @@ import QuantityStepper from "../components/QuantityStepper";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Catalog.css";
 
 function isUnavailableProduct(product) {
@@ -143,7 +144,7 @@ export default function WishlistPage() {
                 src={
                   product.images?.[0]?.url
                     ? product.images[0].url.startsWith("/")
-                      ? `http://localhost:5000${product.images[0].url}`
+                      ? getImageUrl(product.images[0].url)
                       : product.images[0].url
                     : "/login-bg.jpg"
                 }

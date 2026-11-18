@@ -7,6 +7,7 @@ import AdminPagination from "../components/AdminPagination";
 import OrderDeliveryProgress from "../components/OrderDeliveryProgress";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import api, { getErrorMessage } from "../api/axios";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Catalog.css";
 import "../styles/Checkout.css";
 
@@ -47,7 +48,7 @@ export default function OrdersPage() {
           <div className="orders-list">{orders.map((order) => <article className="order-card" key={order._id}>
             <div className="order-card-heading"><span><small>ORDER #{String(order._id).slice(-8).toUpperCase()}</small><b>{new Date(order.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</b></span><OrderStatusBadge order={order} /></div>
             <OrderDeliveryProgress order={order} />
-            <div className="order-card-items">{order.items.map((item, index) => <div className="order-card-item" key={`${order._id}-${index}`}><img src={item.image?.startsWith("/") ? `http://localhost:5000${item.image}` : item.image || "/login-bg.jpg"} alt="" /><span><b>{item.name}</b><small>Qty {item.quantity} · ₹{item.unitPrice.toFixed(2)} each</small></span><strong>₹{item.lineTotal.toFixed(2)}</strong></div>)}</div>
+            <div className="order-card-items">{order.items.map((item, index) => <div className="order-card-item" key={`${order._id}-${index}`}><img src={getImageUrl(item.image) || "/login-bg.jpg"} alt="" /><span><b>{item.name}</b><small>Qty {item.quantity} · ₹{item.unitPrice.toFixed(2)} each</small></span><strong>₹{item.lineTotal.toFixed(2)}</strong></div>)}</div>
             <div className="order-card-footer"><span>{order.address.city}, {order.address.state} · {order.walletAppliedAmount > 0 && order.cashDueAmount > 0 ? "Wallet + Cash on Delivery" : order.paymentMethod === "cod" ? "Cash on Delivery" : order.paymentMethod === "wallet" ? "HealthyBite Wallet" : "Razorpay"}</span><strong>{order.cashDueAmount > 0 && order.walletAppliedAmount > 0 ? `Due ₹${order.cashDueAmount.toFixed(2)}` : `Payable ₹${order.pricing.total.toFixed(2)}`}</strong></div>
             <div className="order-card-actions">
               <Link className="order-view-details" to={`/orders/${order._id}`}>View order details</Link>

@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import ActionConfirmation from "../components/ActionConfirmation";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import api, { getErrorMessage } from "../api/axios";
+import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Checkout.css";
 
 export default function OrderDetailPage() {
@@ -83,7 +84,7 @@ export default function OrderDetailPage() {
           <div className="order-detail-layout">
             <section className="checkout-panel">
               <div className="checkout-panel-heading"><div><PackageCheck size={18} /><h2>Items ordered</h2></div></div>
-              <div className="order-detail-items">{order.items.map((item, index) => <article className="order-detail-item" key={`${order._id}-${index}`}><img src={item.image?.startsWith("/") ? `http://localhost:5000${item.image}` : item.image || "/login-bg.jpg"} alt={item.name} /><div><b>{item.name}</b><small>₹{item.unitPrice.toFixed(2)} × {item.quantity}</small></div><strong>₹{item.lineTotal.toFixed(2)}</strong></article>)}</div>
+              <div className="order-detail-items">{order.items.map((item, index) => <article className="order-detail-item" key={`${order._id}-${index}`}><img src={getImageUrl(item.image) || "/login-bg.jpg"} alt={item.name} /><div><b>{item.name}</b><small>₹{item.unitPrice.toFixed(2)} × {item.quantity}</small></div><strong>₹{item.lineTotal.toFixed(2)}</strong></article>)}</div>
             </section>
             <div className="order-detail-side">
               <section className="checkout-panel"><div className="checkout-panel-heading"><div><MapPin size={18} /><h2>Delivery address</h2></div></div><div className="order-detail-address"><b>{order.address.fullName}</b><span>{order.address.phone}</span><span>{order.address.houseNo}, {order.address.street}{order.address.landmark ? `, ${order.address.landmark}` : ""}</span><span>{order.address.city}, {order.address.state} {order.address.pincode}</span></div></section>
