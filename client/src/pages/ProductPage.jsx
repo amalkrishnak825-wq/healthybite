@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Check,
   ChevronLeft,
@@ -15,6 +15,7 @@ import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 import { addProductToCart } from "../utils/cart";
 import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Catalog.css";
@@ -23,6 +24,8 @@ import "../styles/ProductDetail.css";
 export default function ProductPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAuth();
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [wishlist, setWishlist] = useState(false);
@@ -68,7 +71,10 @@ export default function ProductPage() {
       const result = await api.post(`/wishlist/${product._id}`);
       setWishlist(result.data.added);
     } catch (failure) {
-      if (failure.response?.status === 401) navigate("/login");
+      if (failure.response?.status === 401) {
+        setUser(null);
+        navigate("/login", { state: { from: location } });
+      }
       else setError(getErrorMessage(failure));
     }
   }
@@ -84,7 +90,10 @@ export default function ProductPage() {
       setPendingAction("");
     } catch (failure) {
       setPendingAction("");
-      if (failure.response?.status === 401) navigate("/login");
+      if (failure.response?.status === 401) {
+        setUser(null);
+        navigate("/login", { state: { from: location } });
+      }
       else setError(getErrorMessage(failure));
     } finally {
       setActionBusy(false);

@@ -4,7 +4,11 @@ import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendEmail.js";
 import { generateOtp, hashOtp, otpMeta, verifyOtp } from "../utils/otp.js";
-import { signToken, sendTokenCookie } from "../utils/token.js";
+import {
+  authCookieOptions,
+  signToken,
+  sendTokenCookie,
+} from "../utils/token.js";
 import { isValidPersonName } from "../utils/inputValidation.js";
 const registrationEmailPattern =
   /^[^\s@]{2,}@[a-z\d](?:[a-z\d-]*[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]*[a-z\d])?)+$/i;
@@ -322,10 +326,8 @@ export const logout = (req, res) => {
     ? "adminToken"
     : "token";
   res.cookie(cookieName, "", {
-    httpOnly: true,
+    ...authCookieOptions(),
     expires: new Date(0),
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   });
 
   res.status(200).json({

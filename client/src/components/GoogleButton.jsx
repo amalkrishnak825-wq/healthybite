@@ -3,12 +3,13 @@ import { useState } from "react";
 import { CircleAlert } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/AuthFormError.css";
 
 export default function GoogleButton() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSuccess(credentialResponse) {
@@ -19,7 +20,9 @@ export default function GoogleButton() {
       });
 
       setUser(response.data.user);
-      navigate("/account", { replace: true });
+      navigate(location.state?.from?.pathname || "/account", {
+        replace: true,
+      });
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     }

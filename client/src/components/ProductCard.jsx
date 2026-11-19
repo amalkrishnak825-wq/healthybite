@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Heart, Plus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 import { addProductToCart } from "../utils/cart";
 import { getImageUrl } from "../utils/imageUrl";
 import ActionConfirmation from "./ActionConfirmation";
@@ -33,6 +34,8 @@ export default function ProductCard({
   onToggleWishlist,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAuth();
   const [confirmAdd, setConfirmAdd] = useState(false);
   const [busy, setBusy] = useState(false);
   const fallback = figmaMealImages[product.name?.trim().toLowerCase()];
@@ -60,7 +63,10 @@ export default function ProductCard({
       setConfirmAdd(false);
     } catch (error) {
       setConfirmAdd(false);
-      if (error.response?.status === 401) navigate("/login");
+      if (error.response?.status === 401) {
+        setUser(null);
+        navigate("/login", { state: { from: location } });
+      }
       else onError?.(getErrorMessage(error));
     } finally {
       setBusy(false);

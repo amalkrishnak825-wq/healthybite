@@ -10,6 +10,7 @@ import {
 } from "../config/cloudinary.js";
 import validator from "validator";
 import { isValidIndianPhone, isValidPersonName } from "../utils/inputValidation.js";
+import { authCookieOptions } from "../utils/token.js";
 
 const deleteOldProfilePhoto = async (photoPath) => {
   if (photoPath?.publicId) {
@@ -168,9 +169,7 @@ export const changePassword = asyncHandler(async (req, res) => {
   await user.save();
 
   res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    ...authCookieOptions(),
   });
 
   res.status(200).json({

@@ -10,8 +10,14 @@ export const sendTokenCookie = (
 ) => {
   res.cookie(name, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge,
   });
 };
+
+export const authCookieOptions = () => ({
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: process.env.NODE_ENV === "production",
+});
