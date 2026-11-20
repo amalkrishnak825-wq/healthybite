@@ -9,7 +9,6 @@ import {
   CircleCheck,
   ClipboardList,
   Heart,
-  Leaf,
   MapPin,
   Pencil,
   Plus,
@@ -131,7 +130,7 @@ export default function AccountPage() {
       <header className="site-header">
         <Link to="/" className="brand-logo">
           <span className="brand-symbol">
-            <Leaf size={17} />
+            <img className="brand-mark-image" src="/healthybite-mark.png" alt="" />
           </span>{" "}
           HealthyBite
         </Link>

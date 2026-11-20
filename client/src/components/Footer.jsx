@@ -1,6 +1,4 @@
 import { Link } from "react-router-dom";
-import { Leaf } from "lucide-react";
-
 export default function Footer() {
   return (
     <footer className="auth-footer">
@@ -8,7 +6,7 @@ export default function Footer() {
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
             <span className="footer-logo-icon">
-              <Leaf size={17} />
+              <img className="brand-mark-image" src="/healthybite-mark.png" alt="" />
             </span>
             HealthyBite
           </Link>
