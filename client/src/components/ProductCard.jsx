@@ -4,8 +4,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { getErrorMessage } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { addProductToCart } from "../utils/cart";
-import { getImageUrl } from "../utils/imageUrl";
 import ActionConfirmation from "./ActionConfirmation";
+import ProductImage from "./ProductImage";
 import greenGoddessBowl from "../assets/meal-menu/green-goddess-bowl.png";
 import grilledProteinBowl from "../assets/meal-menu/grilled-protein-bowl.png";
 import artisanAvocadoToast from "../assets/meal-menu/artisan-avocado-toast.png";
@@ -40,11 +40,7 @@ export default function ProductCard({
   const [busy, setBusy] = useState(false);
   const fallback = figmaMealImages[product.name?.trim().toLowerCase()];
   const uploadedImage = product.images?.[0]?.url;
-  const image = uploadedImage
-    ? uploadedImage.startsWith("/")
-      ? getImageUrl(uploadedImage)
-      : uploadedImage
-    : fallback || "/login-bg.jpg";
+  const image = uploadedImage || fallback;
   const tags = (product.dietaryTags || []).slice(0, 3);
   const hasOffer = Number(product.compareAtPrice) > Number(product.price);
   const discount = hasOffer
@@ -115,7 +111,7 @@ export default function ProductCard({
         to={`/products/${product.slug}`}
         aria-label={`View ${product.name}`}
       >
-        <img
+        <ProductImage
           className={`meal-menu-image ${product.stock < 1 ? "out-of-stock-image" : ""}`}
           src={image}
           alt={product.images?.[0]?.alt || product.name}

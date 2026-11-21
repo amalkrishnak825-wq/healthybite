@@ -3,9 +3,9 @@ import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
-import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Checkout.css";
 import "../styles/ReturnRequest.css";
 
@@ -112,7 +112,7 @@ export default function ReturnRequestPage() {
                         <article className={`return-request-item${checked ? " selected" : ""}`} key={`${order._id}-${index}`}>
                           <label className="return-request-item-choice">
                             <input type="checkbox" checked={checked} onChange={(event) => toggleItem(index, event.target.checked)} />
-                            <img src={getImageUrl(item.image) || "/login-bg.jpg"} alt="" />
+                            <ProductImage src={item.image} alt="" />
                             <span><b>{item.name}</b><small>Ordered quantity: {item.quantity} · ₹{Number(item.unitPrice).toFixed(2)} each</small></span>
                           </label>
                           <div className="return-request-quantity">

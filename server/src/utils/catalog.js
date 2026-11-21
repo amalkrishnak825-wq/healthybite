@@ -4,6 +4,7 @@ import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import AppError from "./AppError.js";
 import { escapeRegex } from "./query.js";
+import { MAX_CART_ITEM_QUANTITY } from "../constants/cart.js";
 
 const slugify = (value) =>
   value
@@ -57,6 +58,9 @@ export function isOrderableProduct(product, quantity = 1) {
     product.category &&
     !product.category.isDeleted &&
     product.category.isActive !== false &&
+    Number.isInteger(quantity) &&
+    quantity >= 1 &&
+    quantity <= MAX_CART_ITEM_QUANTITY &&
     product.stock >= quantity &&
     product.stock > 0,
   );

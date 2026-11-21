@@ -2,6 +2,7 @@ import Cart from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { MAX_CART_ITEM_QUANTITY } from "../constants/cart.js";
 import {
   findOrderableProduct,
   isOrderableProduct,
@@ -35,8 +36,15 @@ export const getCart = asyncHandler(async (req, res) => {
 export const addCartItem = asyncHandler(async (req, res) => {
   requireId(req.body.productId, "Product");
   const quantity = Number(req.body.quantity ?? 1);
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99)
-    throw new AppError("Quantity must be between 1 and 99.", 400);
+  if (
+    !Number.isInteger(quantity) ||
+    quantity < 1 ||
+    quantity > MAX_CART_ITEM_QUANTITY
+  )
+    throw new AppError(
+      `Quantity must be between 1 and ${MAX_CART_ITEM_QUANTITY}.`,
+      400,
+    );
   const product = await findOrderableProduct(req.body.productId);
   if (!product?.category || product.stock < 1)
     throw new AppError("This product is unavailable or out of stock.", 409);
@@ -46,9 +54,14 @@ export const addCartItem = asyncHandler(async (req, res) => {
     (entry) => entry.product.toString() === product._id.toString(),
   );
   const nextQuantity = (item?.quantity || 0) + quantity;
-  if (nextQuantity > Math.min(product.stock, 99))
+  if (nextQuantity > MAX_CART_ITEM_QUANTITY)
     throw new AppError(
-      `Only ${Math.min(product.stock, 99)} can be added.`,
+      `You can add up to ${MAX_CART_ITEM_QUANTITY} of each product.`,
+      409,
+    );
+  if (nextQuantity > product.stock)
+    throw new AppError(
+      `Only ${product.stock} can be added.`,
       409,
     );
   if (item) item.quantity = nextQuantity;
@@ -71,16 +84,28 @@ export const addCartItem = asyncHandler(async (req, res) => {
 export const updateCartItem = asyncHandler(async (req, res) => {
   requireId(req.params.productId, "Product");
   const quantity = Number(req.body.quantity);
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99)
-    throw new AppError("Quantity must be between 1 and 99.", 400);
-  const product = await findOrderableProduct(req.params.productId, quantity);
-  if (!product?.category || product.stock < quantity)
-    throw new AppError("Requested quantity is unavailable.", 409);
   const cart = await Cart.findOne({ user: req.user._id });
   const item = cart?.items.find(
     (entry) => entry.product.toString() === req.params.productId,
   );
   if (!item) throw new AppError("Cart item not found.", 404);
+
+  if (!Number.isInteger(quantity) || quantity < 1)
+    throw new AppError("Quantity must be a positive whole number.", 400);
+  const isReducingQuantity = quantity < item.quantity;
+  if (quantity > MAX_CART_ITEM_QUANTITY && !isReducingQuantity)
+    throw new AppError(
+      `You can have up to ${MAX_CART_ITEM_QUANTITY} of each product.`,
+      400,
+    );
+
+  const product = await findOrderableProduct(req.params.productId);
+  if (
+    !product?.category ||
+    product.stock < 1 ||
+    (!isReducingQuantity && product.stock < quantity)
+  )
+    throw new AppError("Requested quantity is unavailable.", 409);
   item.quantity = quantity;
   await cart.save();
   res.json({ success: true, message: "Cart updated." });

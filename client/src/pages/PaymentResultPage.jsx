@@ -3,8 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { CalendarDays, CheckCircle2, CircleX, ClipboardList, Clock3, MapPin, PackageCheck } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProductImage from "../components/ProductImage";
 import api, { getErrorMessage } from "../api/axios";
-import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Checkout.css";
 
 export default function PaymentResultPage() {
@@ -47,7 +47,7 @@ export default function PaymentResultPage() {
         <section className="order-confirmation-items">
           <header><div><span className="home-section-label">FRESHLY PREPARED</span><h2>Artisanal Dishes Ordered</h2></div><span>{order.items.length} {order.items.length === 1 ? "item" : "items"}</span></header>
           <div className="order-confirmation-list">{order.items.map((item, index) => <article className="order-confirmation-item" key={`${order._id}-${index}`}>
-            <img src={getImageUrl(item.image) || "/login-bg.jpg"} alt={item.name} />
+            <ProductImage src={item.image} alt={item.name} />
             <div><b>{item.name}</b><small>Qty {item.quantity} · ₹{Number(item.unitPrice).toFixed(2)} each</small></div>
             <strong>₹{Number(item.lineTotal).toFixed(2)}</strong>
           </article>)}</div>

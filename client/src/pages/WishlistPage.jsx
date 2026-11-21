@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
-import { getImageUrl } from "../utils/imageUrl";
+import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
 import "../styles/Catalog.css";
 
 function isUnavailableProduct(product) {
@@ -50,7 +51,10 @@ export default function WishlistPage() {
     }
   }
   function changeQuantity(product, delta) {
-    const availableStock = Math.min(Number(product.stock) || 0, 99);
+    const availableStock = Math.min(
+      Number(product.stock) || 0,
+      MAX_CART_ITEM_QUANTITY,
+    );
     setQuantities((current) => {
       const currentQuantity = current[product._id] || 1;
       const nextQuantity = Math.max(
@@ -140,14 +144,8 @@ export default function WishlistPage() {
               : "Out of stock";
           return (
             <article className="cart-row wishlist-row" key={product._id}>
-              <img
-                src={
-                  product.images?.[0]?.url
-                    ? product.images[0].url.startsWith("/")
-                      ? getImageUrl(product.images[0].url)
-                      : product.images[0].url
-                    : "/login-bg.jpg"
-                }
+              <ProductImage
+                src={product.images?.[0]?.url}
                 alt={product.name}
               />
               <div className="wishlist-item-details">
@@ -164,7 +162,10 @@ export default function WishlistPage() {
                 onDecrease={() => changeQuantity(product, -1)}
                 onIncrease={() => changeQuantity(product, 1)}
                 decreaseDisabled={quantity <= 1}
-                increaseDisabled={!canOrder || quantity >= Math.min(product.stock, 99)}
+                increaseDisabled={
+                  !canOrder ||
+                  quantity >= Math.min(product.stock, MAX_CART_ITEM_QUANTITY)
+                }
                 decreaseLabel={`Decrease ${product.name} quantity`}
                 increaseLabel={`Increase ${product.name} quantity`}
               />

@@ -3,10 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
-import { getImageUrl } from "../utils/imageUrl";
+import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
 import "../styles/Catalog.css";
 
 export default function CartPage() {
@@ -66,21 +67,17 @@ export default function CartPage() {
                   product.category?.isDeleted;
                 const status = unavailable
                   ? "Unavailable"
-                  : product.stock < 1
-                    ? "Out of stock"
-                    : item.quantity > product.stock
-                      ? `Only ${product.stock} in stock — reduce the quantity`
-                      : `${product.stock} in stock`;
+                  : item.quantity > MAX_CART_ITEM_QUANTITY
+                    ? `Maximum ${MAX_CART_ITEM_QUANTITY} per product — reduce the quantity`
+                    : product.stock < 1
+                      ? "Out of stock"
+                      : item.quantity > product.stock
+                        ? `Only ${product.stock} in stock — reduce the quantity`
+                        : `${product.stock} in stock`;
                 return (
                   <article className="cart-row" key={product._id}>
-                    <img
-                      src={
-                        product.images?.[0]?.url
-                          ? product.images[0].url.startsWith("/")
-                            ? getImageUrl(product.images[0].url)
-                            : product.images[0].url
-                          : "/login-bg.jpg"
-                      }
+                    <ProductImage
+                      src={product.images?.[0]?.url}
                       alt={product.name}
                     />
                     <div>
@@ -100,7 +97,11 @@ export default function CartPage() {
                       onDecrease={() => quantity(product._id, item.quantity - 1)}
                       onIncrease={() => quantity(product._id, item.quantity + 1)}
                       decreaseDisabled={item.quantity <= 1}
-                      increaseDisabled={!item.valid || item.quantity >= Math.min(product.stock, 99)}
+                      increaseDisabled={
+                        !item.valid ||
+                        item.quantity >=
+                          Math.min(product.stock, MAX_CART_ITEM_QUANTITY)
+                      }
                     />
                     <b className="cart-line-total">
                       ₹{item.lineTotal.toFixed(2)}

@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api, { getErrorMessage } from "../api/axios";
-import { getImageUrl } from "../utils/imageUrl";
 import ActionConfirmation from "../components/ActionConfirmation";
 import AdminPageLayout from "../components/AdminPageLayout";
 import AdminPageHeader from "../components/AdminPageHeader";
+import ProductImage from "../components/ProductImage";
 import AvailabilityToggle from "../components/AvailabilityToggle";
 import AdminPagination from "../components/AdminPagination";
 import CategoryEditorModal from "../components/admin/meals/CategoryEditorModal";
@@ -587,12 +587,8 @@ export default function AdminMealsPage() {
                         <td>
                           <div className="catalog-admin-product">
                             {product.images?.[0] && (
-                              <img
-                                src={
-                                  product.images[0].url.startsWith("/")
-                                    ? getImageUrl(product.images[0].url)
-                                    : product.images[0].url
-                                }
+                              <ProductImage
+                                src={product.images[0].url}
                                 alt=""
                               />
                             )}

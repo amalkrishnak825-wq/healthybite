@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import AccountPage from "./pages/AccountPage";
@@ -34,6 +34,8 @@ import OrderDetailPage from "./pages/OrderDetailPage";
 import ReturnRequestPage from "./pages/ReturnRequestPage";
 import WalletPage from "./pages/WalletPage";
 import AboutPage from "./pages/AboutPage";
+import LoadingPage from "./pages/LoadingPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import "./styles/Admin.css";
 import "./styles/NativeValidation.css";
 
@@ -59,6 +61,80 @@ function AdminRoute({ detail = false, meals = false, mealEditor = false, orders 
     )
   ) : (
     <Navigate to="/admin/login" replace />
+  );
+}
+
+function AppRoutes() {
+  const { loading } = useAuth();
+
+  if (loading) return <LoadingPage />;
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/products" element={<CatalogPage />} />
+      <Route path="/products/:slug" element={<ProductPage />} />
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<OtpPage mode="register" />} />
+      </Route>
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route
+        path="/forgot-password/verify"
+        element={<OtpPage mode="reset" />}
+      />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route
+        path="/password-reset-success"
+        element={<ResetSuccessPage />}
+      />
+      <Route path="/account" element={<AccountPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/account/profile" element={<ProfilePage />} />
+        <Route path="/account/addresses/new" element={<AddressFormPage />} />
+        <Route
+          path="/account/addresses/:id/edit"
+          element={<AddressFormPage />}
+        />
+      </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route
+          path="/payment/success/:orderId"
+          element={<PaymentResultPage />}
+        />
+        <Route
+          path="/payment/failure/:orderId"
+          element={<PaymentResultPage />}
+        />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/wallet" element={<WalletPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+        <Route
+          path="/orders/:orderId/return"
+          element={<ReturnRequestPage />}
+        />
+      </Route>
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin" element={<AdminRoute overview />} />
+      <Route path="/admin/overview" element={<AdminRoute overview />} />
+      <Route path="/admin/meals" element={<AdminRoute meals />} />
+      <Route path="/admin/meals/new" element={<AdminRoute mealEditor />} />
+      <Route
+        path="/admin/meals/:productId/edit"
+        element={<AdminRoute mealEditor />}
+      />
+      <Route path="/admin/orders" element={<AdminRoute orders />} />
+      <Route path="/admin/coupons" element={<AdminRoute coupons />} />
+      <Route path="/admin/reports" element={<AdminRoute reports />} />
+      <Route path="/admin/users" element={<AdminRoute />} />
+      <Route path="/admin/users/:id" element={<AdminRoute detail />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 
@@ -148,65 +224,7 @@ export default function App() {
           position="top-center"
           toastOptions={{ style: { fontSize: 14 } }}
         />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/products" element={<CatalogPage />} />
-          <Route path="/products/:slug" element={<ProductPage />} />
-          <Route element={<GuestRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/verify-email" element={<OtpPage mode="register" />} />
-          </Route>
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route
-            path="/forgot-password/verify"
-            element={<OtpPage mode="reset" />}
-          />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route
-            path="/password-reset-success"
-            element={<ResetSuccessPage />}
-          />
-          <Route path="/account" element={<AccountPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/account/profile" element={<ProfilePage />} />
-            <Route
-              path="/account/addresses/new"
-              element={<AddressFormPage />}
-            />
-            <Route
-              path="/account/addresses/:id/edit"
-              element={<AddressFormPage />}
-            />
-          </Route>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/payment/success/:orderId" element={<PaymentResultPage />} />
-            <Route path="/payment/failure/:orderId" element={<PaymentResultPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/wallet" element={<WalletPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-            <Route path="/orders/:orderId/return" element={<ReturnRequestPage />} />
-          </Route>
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin" element={<AdminRoute overview />} />
-          <Route path="/admin/overview" element={<AdminRoute overview />} />
-          <Route path="/admin/meals" element={<AdminRoute meals />} />
-          <Route path="/admin/meals/new" element={<AdminRoute mealEditor />} />
-          <Route
-            path="/admin/meals/:productId/edit"
-            element={<AdminRoute mealEditor />}
-          />
-          <Route path="/admin/orders" element={<AdminRoute orders />} />
-          <Route path="/admin/coupons" element={<AdminRoute coupons />} />
-          <Route path="/admin/reports" element={<AdminRoute reports />} />
-          <Route path="/admin/users" element={<AdminRoute />} />
-          <Route path="/admin/users/:id" element={<AdminRoute detail />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
   );

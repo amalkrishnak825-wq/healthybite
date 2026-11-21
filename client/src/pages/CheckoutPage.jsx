@@ -3,9 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Tag } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ProductImage from "../components/ProductImage";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
-import { getImageUrl } from "../utils/imageUrl";
 import "../styles/Checkout.css";
 
 function checkoutKey() {
@@ -202,7 +202,7 @@ export default function CheckoutPage() {
             </div>
             <aside className="checkout-panel checkout-summary">
               <h2>Order summary</h2>
-              {quote?.items.map((item) => <div className="checkout-summary-item" key={item.productId}><img src={getImageUrl(item.image) || "/login-bg.jpg"} alt="" /><span><b>{item.name}</b><small>Qty {item.quantity} × ₹{item.unitPrice.toFixed(2)}</small></span><strong>₹{item.lineTotal.toFixed(2)}</strong></div>)}
+              {quote?.items.map((item) => <div className="checkout-summary-item" key={item.productId}><ProductImage src={item.image} alt="" /><span><b>{item.name}</b><small>Qty {item.quantity} × ₹{item.unitPrice.toFixed(2)}</small></span><strong>₹{item.lineTotal.toFixed(2)}</strong></div>)}
               <div className="checkout-totals">
                 <span>Items subtotal <b>₹{(quote?.pricing.subtotal || 0).toFixed(2)}</b></span>
                 <span>Shipping <b>{quote?.pricing.shipping ? `₹${quote.pricing.shipping.toFixed(2)}` : "Free"}</b></span>
