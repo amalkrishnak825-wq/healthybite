@@ -610,6 +610,15 @@
   }
 }
 
+@media (max-width: 390px) {
+  .home-page .auth-header {
+    grid-template-columns: 1fr auto;
+  }
+  .home-page .main-navigation {
+    display: none;
+  }
+}
+
 .home-menu-empty {
   padding-top: 55px;
   padding-bottom: 55px;
