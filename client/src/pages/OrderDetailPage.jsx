@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, PackageCheck, RotateCcw } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingIndicator from "../components/LoadingIndicator";
 import ProductImage from "../components/ProductImage";
 import ActionConfirmation from "../components/ActionConfirmation";
 import OrderStatusBadge from "../components/OrderStatusBadge";
@@ -77,7 +78,7 @@ export default function OrderDetailPage() {
       <Header />
       <main className="order-detail-page">
         <Link className="checkout-back" to="/orders"><ArrowLeft size={16} /> Back to my orders</Link>
-        {loading ? <div className="checkout-loading">Loading order details…</div> : error && !order ? <div className="checkout-error" role="alert">{error}</div> : order && <>
+        {loading ? <LoadingIndicator className="checkout-loading" message="Loading order details…" /> : error && !order ? <div className="checkout-error" role="alert">{error}</div> : order && <>
           {error && <div className="checkout-error" role="alert">{error}</div>}
           <div className="order-detail-heading"><div><span className="home-section-label">ORDER DETAILS</span><h1>Order #{String(order._id).slice(-8).toUpperCase()}</h1><p>Placed {new Date(order.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p></div><OrderStatusBadge order={order} /></div>
           {returnMessage && <div className="order-return-success" role="status">{returnMessage}</div>}

@@ -1,19 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingIndicator from "../components/LoadingIndicator";
 import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
 import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
+import {
+  canOrderProduct,
+  getMaximumOrderQuantity,
+  isUnavailableProduct,
+} from "../utils/productAvailability";
 import "../styles/Catalog.css";
 
 export default function CartPage() {
   const navigate = useNavigate();
   const [cart, setCart] = useState({ items: [], total: 0, valid: false });
   const [error, setError] = useState("");
+  const [isCartLoading, setIsCartLoading] = useState(true);
+  const [updatingProductId, setUpdatingProductId] = useState("");
+  const updateInProgress = useRef(false);
   const loadCart = useCallback(async () => {
     const response = await api.get("/cart");
     setCart(response.data);
@@ -22,16 +31,59 @@ export default function CartPage() {
     );
   }, []);
   useEffect(() => {
-    loadCart().catch((failure) => setError(getErrorMessage(failure)));
+    loadCart()
+      .catch((failure) => setError(getErrorMessage(failure)))
+      .finally(() => setIsCartLoading(false));
   }, [loadCart]);
   async function quantity(productId, next) {
+    if (updateInProgress.current) return;
+    const currentItem = cart.items.find(
+      (item) => item.product._id === productId,
+    );
+    if (!currentItem) return;
+    if (next > getMaximumOrderQuantity(currentItem.product)) return;
+
+    updateInProgress.current = true;
+    setUpdatingProductId(productId);
     setError("");
+    const nextItems = cart.items.flatMap((item) => {
+      if (item.product._id !== productId) return [item];
+      if (next < 1) return [];
+      return [
+        {
+          ...item,
+          quantity: next,
+          lineTotal: Number(item.product.price) * next,
+          valid: canOrderProduct(item.product, next),
+        },
+      ];
+    });
+    const optimisticCart = {
+      ...cart,
+      items: nextItems,
+      total: nextItems.reduce((total, item) => total + item.lineTotal, 0),
+      valid: nextItems.length > 0 && nextItems.every((item) => item.valid),
+    };
+    setCart(optimisticCart);
+    syncCartCount(
+      nextItems.reduce((total, item) => total + item.quantity, 0),
+    );
     try {
       if (next < 1) await api.delete(`/cart/items/${productId}`);
       else await api.patch(`/cart/items/${productId}`, { quantity: next });
-      await loadCart();
     } catch (failure) {
       setError(getErrorMessage(failure));
+      try {
+        await loadCart();
+      } catch {
+        setCart(cart);
+        syncCartCount(
+          cart.items.reduce((total, item) => total + item.quantity, 0),
+        );
+      }
+    } finally {
+      updateInProgress.current = false;
+      setUpdatingProductId("");
     }
   }
   async function remove(productId) {
@@ -55,16 +107,17 @@ export default function CartPage() {
           <Link to="/products">Continue shopping</Link>
         </div>
         {error && <div className="catalog-error">{error}</div>}
-        {cart.items.length ? (
+        {isCartLoading ? (
+          <LoadingIndicator
+            className="checkout-loading"
+            message="Loading your cart…"
+          />
+        ) : cart.items.length ? (
           <>
             <div>
               {cart.items.map((item) => {
                 const product = item.product;
-                const unavailable =
-                  product.isDeleted ||
-                  product.isBlocked ||
-                  !product.isPublished ||
-                  product.category?.isDeleted;
+                const unavailable = isUnavailableProduct(product);
                 const status = unavailable
                   ? "Unavailable"
                   : item.quantity > MAX_CART_ITEM_QUANTITY
@@ -98,10 +151,9 @@ export default function CartPage() {
                       onIncrease={() => quantity(product._id, item.quantity + 1)}
                       decreaseDisabled={item.quantity <= 1}
                       increaseDisabled={
-                        !item.valid ||
-                        item.quantity >=
-                          Math.min(product.stock, MAX_CART_ITEM_QUANTITY)
+                        !item.valid || item.quantity >= getMaximumOrderQuantity(product)
                       }
+                      loading={updatingProductId === product._id}
                     />
                     <b className="cart-line-total">
                       ₹{item.lineTotal.toFixed(2)}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Tag } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingIndicator from "../components/LoadingIndicator";
 import ProductImage from "../components/ProductImage";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
@@ -173,7 +174,7 @@ export default function CheckoutPage() {
         <Link className="checkout-back" to="/cart"><ArrowLeft size={16} /> Back to cart</Link>
         <div className="checkout-heading"><span className="home-section-label">ALMOST THERE</span><h1>Checkout</h1><p>Choose where we should deliver your fresh meals.</p></div>
         {error && <div className="checkout-error" role="alert">{error}</div>}
-        {loading ? <div className="checkout-loading">Loading your checkout…</div> : (
+        {loading ? <LoadingIndicator className="checkout-loading" message="Loading your checkout…" /> : (
           <div className="checkout-layout">
             <div className="checkout-main-column">
               <section className="checkout-panel">

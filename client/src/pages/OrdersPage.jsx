@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ClipboardList } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingIndicator from "../components/LoadingIndicator";
 import ProductImage from "../components/ProductImage";
 import AdminPagination from "../components/AdminPagination";
 import OrderDeliveryProgress from "../components/OrderDeliveryProgress";
@@ -44,7 +45,7 @@ export default function OrdersPage() {
       <main className="wishlist-page">
         <div className="catalog-heading"><div><span className="home-section-label">YOUR HEALTHYBITE</span><h1>My orders</h1><p>Review your past meal orders.</p></div><Link to="/products">Explore meals</Link></div>
         {error && <div className="checkout-error" role="alert">{error}</div>}
-        {loading ? <div className="checkout-loading">Loading your orders…</div> : pagination.total ? <>
+        {loading ? <LoadingIndicator className="checkout-loading" message="Loading your orders…" /> : pagination.total ? <>
           <div className="orders-list">{orders.map((order) => <article className="order-card" key={order._id}>
             <div className="order-card-heading"><span><small>ORDER #{String(order._id).slice(-8).toUpperCase()}</small><b>{new Date(order.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</b></span><OrderStatusBadge order={order} /></div>
             <OrderDeliveryProgress order={order} />

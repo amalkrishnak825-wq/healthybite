@@ -1,0 +1,21 @@
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.loading-indicator > svg {
+  flex: none;
+  animation: loading-indicator-spin 0.85s linear infinite;
+}
+
+@keyframes loading-indicator-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator > svg {
+    animation-duration: 3s;
+  }
+}

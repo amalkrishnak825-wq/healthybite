@@ -3,6 +3,7 @@ import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingIndicator from "../components/LoadingIndicator";
 import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
@@ -84,7 +85,7 @@ export default function ReturnRequestPage() {
           <p>Select the meal and quantity you want to return, then tell us why.</p>
         </div>
 
-        {loading ? <div className="checkout-loading">Loading order details…</div> : error && !order ? <div className="checkout-error" role="alert">{error}</div> : order && (
+        {loading ? <LoadingIndicator className="checkout-loading" message="Loading order details…" /> : error && !order ? <div className="checkout-error" role="alert">{error}</div> : order && (
           <>
             <section className="return-request-order-ref">
               <span>Order <b>#{String(order._id).slice(-8).toUpperCase()}</b></span>

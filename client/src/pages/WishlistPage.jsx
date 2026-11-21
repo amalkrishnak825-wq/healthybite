@@ -8,22 +8,12 @@ import QuantityStepper from "../components/QuantityStepper";
 import ActionConfirmation from "../components/ActionConfirmation";
 import api, { getErrorMessage } from "../api/axios";
 import { addProductToCart } from "../utils/cart";
-import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
+import {
+  canOrderProduct,
+  getMaximumOrderQuantity,
+  isUnavailableProduct,
+} from "../utils/productAvailability";
 import "../styles/Catalog.css";
-
-function isUnavailableProduct(product) {
-  return (
-    product.isDeleted ||
-    product.isBlocked ||
-    !product.isPublished ||
-    product.category?.isDeleted ||
-    product.category?.isActive === false
-  );
-}
-
-function canOrderProduct(product) {
-  return !isUnavailableProduct(product) && product.stock > 0;
-}
 
 export default function WishlistPage() {
   const navigate = useNavigate();
@@ -51,10 +41,7 @@ export default function WishlistPage() {
     }
   }
   function changeQuantity(product, delta) {
-    const availableStock = Math.min(
-      Number(product.stock) || 0,
-      MAX_CART_ITEM_QUANTITY,
-    );
+    const availableStock = getMaximumOrderQuantity(product);
     setQuantities((current) => {
       const currentQuantity = current[product._id] || 1;
       const nextQuantity = Math.max(
@@ -163,8 +150,7 @@ export default function WishlistPage() {
                 onIncrease={() => changeQuantity(product, 1)}
                 decreaseDisabled={quantity <= 1}
                 increaseDisabled={
-                  !canOrder ||
-                  quantity >= Math.min(product.stock, MAX_CART_ITEM_QUANTITY)
+                  !canOrder || quantity >= getMaximumOrderQuantity(product)
                 }
                 decreaseLabel={`Decrease ${product.name} quantity`}
                 increaseLabel={`Increase ${product.name} quantity`}
