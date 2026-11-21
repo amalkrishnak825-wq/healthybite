@@ -1,5 +1,3 @@
-import { LoaderCircle } from "lucide-react";
-
 export default function QuantityStepper({
   value,
   onDecrease,
@@ -19,11 +17,6 @@ export default function QuantityStepper({
     >
       <button type="button" disabled={disabled || loading || decreaseDisabled} onClick={onDecrease} aria-label={decreaseLabel}>−</button>
       <span>{value}</span>
-      {loading && (
-        <span className="cart-quantity-loading" aria-hidden="true">
-          <LoaderCircle size={14} />
-        </span>
-      )}
       <button type="button" disabled={disabled || loading || increaseDisabled} onClick={onIncrease} aria-label={increaseLabel}>+</button>
     </div>
   );

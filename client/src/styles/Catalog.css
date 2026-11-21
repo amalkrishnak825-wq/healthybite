@@ -457,17 +457,6 @@
   border-radius: 6px;
   background: white;
 }
-.cart-quantity-loading {
-  display: grid;
-  place-items: center;
-  color: #527552;
-}
-.cart-quantity-loading svg {
-  animation: cart-quantity-spin 0.8s linear infinite;
-}
-@keyframes cart-quantity-spin {
-  to { transform: rotate(360deg); }
-}
 .cart-remove {
   border: 0;
   background: none;
