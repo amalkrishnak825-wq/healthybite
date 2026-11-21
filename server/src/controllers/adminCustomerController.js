@@ -3,6 +3,7 @@ import Address from "../models/Address.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { isValidIndianPhone, isValidPersonName } from "../utils/inputValidation.js";
+import { revokeUserRefreshSessions } from "../services/refreshSessionService.js";
 import {
   escapeRegex,
   paginationMetadata,
@@ -120,6 +121,9 @@ export const setUserBlocked = asyncHandler(async (req, res) => {
     { new: true, runValidators: true },
   ).select("name email isBlocked");
   if (!user) throw new AppError("Customer not found.", 404);
+  if (user.isBlocked) {
+    await revokeUserRefreshSessions(user._id, "customer");
+  }
   res.json({
     success: true,
     user,

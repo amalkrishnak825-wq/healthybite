@@ -5,6 +5,7 @@ import {
   loginLimiter,
   adminLoginLimiter,
   otpLimiter,
+  refreshLimiter,
 } from "../middleware/rateLimiters.js";
 import {
   register,
@@ -12,6 +13,8 @@ import {
   resendRegistrationOtp,
   login,
   logout,
+  refreshSession,
+  refreshAdminSession,
   forgotPassword,
   verifyResetOtp,
   resetPassword,
@@ -31,6 +34,8 @@ router.post("/verify-otp", otpLimiter, verifyRegistrationOtp);
 router.post("/resend-otp", otpLimiter, resendRegistrationOtp);
 router.post("/login", loginLimiter, login);
 router.post("/admin/login", adminLoginLimiter, adminLogin);
+router.post("/refresh", refreshLimiter, refreshSession);
+router.post("/admin/refresh", refreshLimiter, refreshAdminSession);
 router.post("/admin/logout", logout);
 router.get("/admin/customers/summary", protectAdmin, customerSummary);
 router.get("/admin/users/:id", protectAdmin, getCustomer);

@@ -5,10 +5,17 @@ import asyncHandler from "../utils/asyncHandler.js";
 import sendEmail from "../utils/sendEmail.js";
 import { generateOtp, hashOtp, otpMeta, verifyOtp } from "../utils/otp.js";
 import {
-  authCookieOptions,
   signToken,
-  sendTokenCookie,
+  sendAuthCookies,
+  clearAuthCookies,
 } from "../utils/token.js";
+import {
+  createRefreshSession,
+  rotateRefreshSession,
+  revokeRefreshSession,
+  revokeRefreshSessionById,
+  revokeUserRefreshSessions,
+} from "../services/refreshSessionService.js";
 import { isValidPersonName } from "../utils/inputValidation.js";
 const registrationEmailPattern =
   /^[^\s@]{2,}@[a-z\d](?:[a-z\d-]*[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]*[a-z\d])?)+$/i;
@@ -242,7 +249,8 @@ export const verifyRegistrationOtp = asyncHandler(async (req, res) => {
   await Otp.deleteOne({ _id: otpRecord._id });
 
   const token = signToken(user._id.toString());
-  sendTokenCookie(res, token);
+  const refreshToken = await createRefreshSession(user._id, "customer");
+  sendAuthCookies(res, token, refreshToken, "customer");
 
   res.status(201).json({
     success: true,
@@ -285,7 +293,8 @@ export const login = asyncHandler(async (req, res) => {
   }
 
   const token = signToken(user._id.toString());
-  sendTokenCookie(res, token);
+  const refreshToken = await createRefreshSession(user._id, "customer");
+  sendAuthCookies(res, token, refreshToken, "customer");
 
   res.status(200).json({
     success: true,
@@ -309,7 +318,13 @@ export const adminLogin = asyncHandler(async (req, res) => {
   if (!user || !(await user.comparePassword(password)))
     throw new AppError("Invalid email or password.", 401);
   if (user.role !== "admin") throw new AppError("Admin access required.", 403);
-  sendTokenCookie(res, signToken(user._id.toString()), { name: "adminToken" });
+  const refreshToken = await createRefreshSession(user._id, "admin");
+  sendAuthCookies(
+    res,
+    signToken(user._id.toString()),
+    refreshToken,
+    "admin",
+  );
   res.status(200).json({
     success: true,
     user: {
@@ -321,20 +336,74 @@ export const adminLogin = asyncHandler(async (req, res) => {
   });
 });
 
-export const logout = (req, res) => {
-  const cookieName = req.originalUrl.includes("/admin/")
-    ? "adminToken"
-    : "token";
-  res.cookie(cookieName, "", {
-    ...authCookieOptions(),
-    expires: new Date(0),
-  });
+export const logout = asyncHandler(async (req, res) => {
+  const role = req.originalUrl.includes("/admin/") ? "admin" : "customer";
+  const refreshCookieName =
+    role === "admin" ? "adminRefreshToken" : "refreshToken";
+  await revokeRefreshSession(req.cookies?.[refreshCookieName]);
+  clearAuthCookies(res, role);
 
   res.status(200).json({
     success: true,
     message: "Logged out successfully.",
   });
-};
+});
+
+const refreshSessionForRole = (role) =>
+  asyncHandler(async (req, res) => {
+    const cookieName =
+      role === "admin" ? "adminRefreshToken" : "refreshToken";
+    let rotated;
+
+    try {
+      rotated = await rotateRefreshSession(req.cookies?.[cookieName], role);
+    } catch (error) {
+      clearAuthCookies(res, role);
+      throw error;
+    }
+
+    const { session, refreshToken } = rotated;
+    const user = await User.findById(session.userId);
+    const passwordChangedAfterSession =
+      user?.passwordChangedAt &&
+      session.createdAt.getTime() <= user.passwordChangedAt.getTime();
+
+    if (
+      !user ||
+      user.isBlocked ||
+      (role === "admin" && user.role !== "admin") ||
+      passwordChangedAfterSession
+    ) {
+      if (user) await revokeUserRefreshSessions(user._id, role);
+      else await revokeRefreshSessionById(session._id);
+      clearAuthCookies(res, role);
+      throw new AppError(
+        user?.isBlocked
+          ? "Your account has been blocked. Please contact HealthyBite support."
+          : "Your session expired. Please sign in again.",
+        user?.isBlocked ? 403 : 401,
+      );
+    }
+
+    sendAuthCookies(
+      res,
+      signToken(user._id.toString()),
+      refreshToken,
+      role,
+    );
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  });
+
+export const refreshSession = refreshSessionForRole("customer");
+export const refreshAdminSession = refreshSessionForRole("admin");
 
 export const getMe = asyncHandler(async (req, res) => {
   res.status(200).json({

@@ -3,8 +3,9 @@ import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-const authenticate = async (token) => {
+const authenticate = async (token, refreshToken, res) => {
   if (!token) {
+    if (refreshToken) res.setHeader("X-Auth-Refreshable", "true");
     throw new AppError("Please log in to access this resource.", 401);
   }
 
@@ -13,6 +14,7 @@ const authenticate = async (token) => {
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
+    if (refreshToken) res.setHeader("X-Auth-Refreshable", "true");
     throw new AppError("Session expired. Please log in again.", 401);
   }
 
@@ -41,17 +43,22 @@ const authenticate = async (token) => {
 
 const protect = asyncHandler(async (req, res, next) => {
   let token = req.cookies?.token;
+  const refreshToken = req.cookies?.refreshToken;
 
   if (!token && req.headers.authorization?.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  req.user = await authenticate(token);
+  req.user = await authenticate(token, refreshToken, res);
   next();
 });
 
 export const protectAdmin = asyncHandler(async (req, res, next) => {
-  const user = await authenticate(req.cookies?.adminToken);
+  const user = await authenticate(
+    req.cookies?.adminToken,
+    req.cookies?.adminRefreshToken,
+    res,
+  );
 
   if (user.role !== "admin") {
     throw new AppError("Admin access required.", 403);

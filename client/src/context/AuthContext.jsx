@@ -8,6 +8,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    function clearExpiredSession() {
+      setUser(null);
+    }
+
+    window.addEventListener("healthyBite:session-expired", clearExpiredSession);
+    return () =>
+      window.removeEventListener(
+        "healthyBite:session-expired",
+        clearExpiredSession,
+      );
+  }, []);
+
+  useEffect(() => {
     let active = true;
     async function checkAuth() {
       try {

@@ -2,7 +2,8 @@ import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { signToken, sendTokenCookie } from "../utils/token.js";
+import { signToken, sendAuthCookies } from "../utils/token.js";
+import { createRefreshSession } from "../services/refreshSessionService.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -59,7 +60,8 @@ export const googleLogin = asyncHandler(async (req, res) => {
   }
 
   const token = signToken(user._id);
-  sendTokenCookie(res, token);
+  const refreshToken = await createRefreshSession(user._id, "customer");
+  sendAuthCookies(res, token, refreshToken, "customer");
 
   res.status(200).json({
     success: true,

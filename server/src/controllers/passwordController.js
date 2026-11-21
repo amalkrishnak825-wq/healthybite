@@ -4,6 +4,7 @@ import Otp from "../models/Otp.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { issueOtp, checkOtp } from "../utils/otp.js";
+import { revokeUserRefreshSessions } from "../services/refreshSessionService.js";
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -132,6 +133,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.passwordChangedAt = new Date();
   await user.save();
+  await revokeUserRefreshSessions(user._id);
 
   res.status(200).json({
     success: true,

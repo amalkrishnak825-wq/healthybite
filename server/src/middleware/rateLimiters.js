@@ -33,6 +33,12 @@ export const adminLoginLimiter = make({
   message: "Too many admin login attempts. Try again in 15 minutes.",
 });
 
+export const refreshLimiter = make({
+  windowMs: 15 * MIN,
+  limit: 60,
+  message: "Too many session refreshes. Please try again later.",
+});
+
 export const registerLimiter = make({
   windowMs: 60 * MIN,
   limit: 10,
