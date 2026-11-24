@@ -1,0 +1,8 @@
+{
+  "name": "healthybite-unit-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test unit/client/*.test.js unit/server/*.test.js"
+  }
+}
