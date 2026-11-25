@@ -101,7 +101,6 @@ export const getPincodeDetails = asyncHandler(async (req, res) => {
       name: office.Name || "",
       district: office.District || "",
       state: office.State || "",
-      country: office.Country || "India",
       pincode: String(office.Pincode || pincode),
     })),
   });

@@ -22,7 +22,7 @@ const empty = {
   locality: "",
   city: "",
   state: "",
-  country: "India",
+  country: "",
   pincode: "",
   isDefault: false,
 };
@@ -65,7 +65,6 @@ export default function AddressFormPage() {
       locality: office.name || current.locality,
       city: office.district || current.city,
       state: office.state || current.state,
-      country: office.country || current.country || "India",
     }));
   }, []);
 
@@ -330,7 +329,7 @@ export default function AddressFormPage() {
             </label>
             <label>
               Country
-              <input required value={form.country} onChange={field("country")} />
+              <input value={form.country} onChange={field("country")} />
             </label>
             <label className={pincodeError ? "address-field-invalid" : ""}>
               PIN code
@@ -360,11 +359,6 @@ export default function AddressFormPage() {
               {postalLookupStatus === "not-found" && (
                 <span className="muted" role="status">
                   No postal details found. Enter the location manually.
-                </span>
-              )}
-              {postalLookupStatus === "error" && (
-                <span className="muted" role="status">
-                  Postal lookup is unavailable. You can enter the location manually.
                 </span>
               )}
             </label>
