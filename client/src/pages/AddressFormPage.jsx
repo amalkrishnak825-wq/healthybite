@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CircleAlert, Save } from "lucide-react";
 import api, { getErrorMessage } from "../api/axios";
+import { lookupPincode } from "../api/addresses";
 import FieldError from "../components/FieldError";
 import {
   getIndianPhoneError,
@@ -18,8 +19,10 @@ const empty = {
   houseNo: "",
   street: "",
   landmark: "",
+  locality: "",
   city: "",
   state: "",
+  country: "India",
   pincode: "",
   isDefault: false,
 };
@@ -36,6 +39,10 @@ export default function AddressFormPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [phoneErrorDismissed, setPhoneErrorDismissed] = useState(false);
   const [pincodeErrorDismissed, setPincodeErrorDismissed] = useState(false);
+  const [postalOffices, setPostalOffices] = useState([]);
+  const [selectedPostalOffice, setSelectedPostalOffice] = useState(0);
+  const [postalLookupStatus, setPostalLookupStatus] = useState("idle");
+  const skipInitialPincodeLookup = useRef(null);
   const fullNameError =
     touched.fullName || submitAttempted || form.fullName
       ? getNameError(form.fullName, { required: true, max: 80 })
@@ -50,6 +57,17 @@ export default function AddressFormPage() {
       : "";
   const visiblePhoneError = phoneErrorDismissed ? "" : phoneError;
   const visiblePincodeError = pincodeErrorDismissed ? "" : pincodeError;
+
+  const applyPostalOffice = useCallback((office) => {
+    if (!office) return;
+    setForm((current) => ({
+      ...current,
+      locality: office.name || current.locality,
+      city: office.district || current.city,
+      state: office.state || current.state,
+      country: office.country || current.country || "India",
+    }));
+  }, []);
 
   useEffect(() => {
     if (!phoneError) return undefined;
@@ -70,7 +88,10 @@ export default function AddressFormPage() {
       .get("/addresses")
       .then((response) => {
         const address = response.data.addresses.find((item) => item._id === id);
-        if (active && address) setForm({ ...empty, ...address });
+        if (active && address) {
+          skipInitialPincodeLookup.current = address.pincode;
+          setForm({ ...empty, ...address });
+        }
         if (active && !address)
           setErrorMessage("We couldn't find that saved address.");
       })
@@ -81,6 +102,52 @@ export default function AddressFormPage() {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (skipInitialPincodeLookup.current === form.pincode) {
+      skipInitialPincodeLookup.current = null;
+      return undefined;
+    }
+    if (getIndianPincodeError(form.pincode)) {
+      setPostalLookupStatus("idle");
+      setPostalOffices([]);
+      return undefined;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+    setPostalLookupStatus("loading");
+    const timer = window.setTimeout(async () => {
+      try {
+        const result = await lookupPincode(form.pincode, {
+          signal: controller.signal,
+        });
+        if (!active) return;
+        const offices = Array.isArray(result.postOffices)
+          ? result.postOffices
+          : [];
+        if (!offices.length) {
+          setPostalOffices([]);
+          setPostalLookupStatus("not-found");
+          return;
+        }
+        setPostalOffices(offices);
+        setSelectedPostalOffice(0);
+        setPostalLookupStatus("success");
+        applyPostalOffice(offices[0]);
+      } catch (error) {
+        if (!active || error.code === "ERR_CANCELED") return;
+        setPostalOffices([]);
+        setPostalLookupStatus("error");
+      }
+    }, 350);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [form.pincode, applyPostalOffice]);
 
   function field(key) {
     return (event) => {
@@ -254,12 +321,16 @@ export default function AddressFormPage() {
               <input value={form.landmark} onChange={field("landmark")} />
             </label>
             <label>
-              City
+              City / district
               <input required value={form.city} onChange={field("city")} />
             </label>
             <label>
               State
               <input required value={form.state} onChange={field("state")} />
+            </label>
+            <label>
+              Country
+              <input required value={form.country} onChange={field("country")} />
             </label>
             <label className={pincodeError ? "address-field-invalid" : ""}>
               PIN code
@@ -272,6 +343,7 @@ export default function AddressFormPage() {
                 onChange={(event) => {
                   setErrorMessage("");
                   setPincodeErrorDismissed(false);
+                  skipInitialPincodeLookup.current = null;
                   setForm((current) => ({
                     ...current,
                     pincode: event.target.value.replace(/\D/g, "").slice(0, 6),
@@ -280,6 +352,47 @@ export default function AddressFormPage() {
                 onBlur={() => setTouched((current) => ({ ...current, pincode: true }))}
               />
               <FieldError id="address-pincode-error" className="address-field-error" message={visiblePincodeError} />
+              {postalLookupStatus === "loading" && (
+                <span className="muted" role="status">
+                  Looking up this PIN code…
+                </span>
+              )}
+              {postalLookupStatus === "not-found" && (
+                <span className="muted" role="status">
+                  No postal details found. Enter the location manually.
+                </span>
+              )}
+              {postalLookupStatus === "error" && (
+                <span className="muted" role="status">
+                  Postal lookup is unavailable. You can enter the location manually.
+                </span>
+              )}
+            </label>
+            {postalOffices.length > 1 && (
+              <label>
+                Choose post office
+                <select
+                  value={selectedPostalOffice}
+                  onChange={(event) => {
+                    const index = Number(event.target.value);
+                    setSelectedPostalOffice(index);
+                    applyPostalOffice(postalOffices[index]);
+                  }}
+                >
+                  {postalOffices.map((office, index) => (
+                    <option
+                      key={`${office.name}-${office.pincode}-${index}`}
+                      value={index}
+                    >
+                      {office.name}{office.district ? ` - ${office.district}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label>
+              Locality / post office
+              <input value={form.locality} onChange={field("locality")} />
             </label>
             <label className="check-label">
               <input

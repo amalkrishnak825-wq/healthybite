@@ -6,11 +6,15 @@ import {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  getPincodeDetails,
 } from "../controllers/addressController.js";
+import { postalLookupLimiter } from "../middleware/rateLimiters.js";
 
 const router = Router();
 
 router.use(protect);
+
+router.get("/pincode/:pincode", postalLookupLimiter, getPincodeDetails);
 
 router.route("/").get(getAddresses).post(createAddress);
 

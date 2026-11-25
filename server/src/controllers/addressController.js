@@ -14,8 +14,10 @@ const addressFields = [
   "houseNo",
   "street",
   "landmark",
+  "locality",
   "city",
   "state",
+  "country",
   "pincode",
 ];
 
@@ -64,6 +66,46 @@ const validateAddress = (data, partial = false) => {
   if (data.type !== undefined && !["Home", "Work", "Other"].includes(data.type))
     throw new AppError("Address type must be Home, Work, or Other.", 400);
 };
+
+export const getPincodeDetails = asyncHandler(async (req, res) => {
+  const pincode = String(req.params.pincode || "").trim();
+  if (!isValidIndianPincode(pincode)) {
+    throw new AppError("Enter a valid 6-digit PIN code.", 400);
+  }
+
+  let payload;
+  try {
+    const response = await fetch(
+      `https://api.postalpincode.in/pincode/${encodeURIComponent(pincode)}`,
+      {
+        signal: AbortSignal.timeout(8000),
+        headers: { Accept: "application/json" },
+      },
+    );
+    if (!response.ok) throw new Error("Postal lookup failed.");
+    payload = await response.json();
+  } catch {
+    throw new AppError("Postal lookup is temporarily unavailable.", 502);
+  }
+
+  const postalResult = Array.isArray(payload) ? payload[0] : null;
+  const offices =
+    postalResult?.Status === "Success" && Array.isArray(postalResult.PostOffice)
+      ? postalResult.PostOffice
+      : [];
+
+  res.status(200).json({
+    success: true,
+    results: offices.length,
+    postOffices: offices.map((office) => ({
+      name: office.Name || "",
+      district: office.District || "",
+      state: office.State || "",
+      country: office.Country || "India",
+      pincode: String(office.Pincode || pincode),
+    })),
+  });
+});
 
 export const getAddresses = asyncHandler(async (req, res) => {
   const addresses = await Address.find({ user: req.user._id }).sort({

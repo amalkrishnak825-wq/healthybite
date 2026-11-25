@@ -46,6 +46,12 @@ const addressSchema = new mongoose.Schema(
       default: "",
     },
 
+    locality: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     city: {
       type: String,
       required: true,
@@ -56,6 +62,12 @@ const addressSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+
+    country: {
+      type: String,
+      trim: true,
+      default: "India",
     },
 
     pincode: {

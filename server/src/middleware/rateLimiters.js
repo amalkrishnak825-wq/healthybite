@@ -21,6 +21,12 @@ export const apiLimiter = make({
   message: "Too many requests. Please slow down.",
 });
 
+export const postalLookupLimiter = make({
+  windowMs: 15 * MIN,
+  limit: 60,
+  message: "Too many PIN code lookups. Please try again later.",
+});
+
 export const loginLimiter = make({
   windowMs: 15 * MIN,
   limit: 10,
