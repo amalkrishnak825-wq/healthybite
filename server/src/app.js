@@ -14,6 +14,10 @@ import adminCouponRoutes from "./routes/adminCouponRoutes.js";
 import walletRoutes from "./routes/walletRoutes.js";
 
 const app = express();
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  ...(process.env.NODE_ENV === "development" ? ["http://localhost:5173"] : []),
+].filter(Boolean);
 
 app.use(
   helmet({
@@ -25,7 +29,7 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
     exposedHeaders: ["X-Auth-Refreshable"],
   }),
