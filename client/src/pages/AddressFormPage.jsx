@@ -39,7 +39,6 @@ export default function AddressFormPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [phoneErrorDismissed, setPhoneErrorDismissed] = useState(false);
   const [pincodeErrorDismissed, setPincodeErrorDismissed] = useState(false);
-  const [postalLookupStatus, setPostalLookupStatus] = useState("idle");
   const skipInitialPincodeLookup = useRef(null);
   const fullNameError =
     touched.fullName || submitAttempted || form.fullName
@@ -107,13 +106,11 @@ export default function AddressFormPage() {
       return undefined;
     }
     if (getIndianPincodeError(form.pincode)) {
-      setPostalLookupStatus("idle");
       return undefined;
     }
 
     let active = true;
     const controller = new AbortController();
-    setPostalLookupStatus("loading");
     const timer = window.setTimeout(async () => {
       try {
         const result = await lookupPincode(form.pincode, {
@@ -123,15 +120,10 @@ export default function AddressFormPage() {
         const offices = Array.isArray(result.postOffices)
           ? result.postOffices
           : [];
-        if (!offices.length) {
-          setPostalLookupStatus("not-found");
-          return;
-        }
-        setPostalLookupStatus("success");
+        if (!offices.length) return;
         applyPostalOffice(offices[0]);
-      } catch (error) {
-        if (!active || error.code === "ERR_CANCELED") return;
-        setPostalLookupStatus("error");
+      } catch {
+        // Keep postal lookup failures silent; location fields remain editable.
       }
     }, 350);
 
@@ -345,16 +337,6 @@ export default function AddressFormPage() {
                 onBlur={() => setTouched((current) => ({ ...current, pincode: true }))}
               />
               <FieldError id="address-pincode-error" className="address-field-error" message={visiblePincodeError} />
-              {postalLookupStatus === "loading" && (
-                <span className="muted" role="status">
-                  Looking up this PIN code…
-                </span>
-              )}
-              {postalLookupStatus === "not-found" && (
-                <span className="muted" role="status">
-                  No postal details found. Enter the location manually.
-                </span>
-              )}
             </label>
             <label className="check-label">
               <input
