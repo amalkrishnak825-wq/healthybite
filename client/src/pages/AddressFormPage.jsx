@@ -39,8 +39,6 @@ export default function AddressFormPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [phoneErrorDismissed, setPhoneErrorDismissed] = useState(false);
   const [pincodeErrorDismissed, setPincodeErrorDismissed] = useState(false);
-  const [postalOffices, setPostalOffices] = useState([]);
-  const [selectedPostalOffice, setSelectedPostalOffice] = useState(0);
   const [postalLookupStatus, setPostalLookupStatus] = useState("idle");
   const skipInitialPincodeLookup = useRef(null);
   const fullNameError =
@@ -65,6 +63,7 @@ export default function AddressFormPage() {
       locality: office.name || current.locality,
       city: office.district || current.city,
       state: office.state || current.state,
+      country: office.country || current.country,
     }));
   }, []);
 
@@ -109,7 +108,6 @@ export default function AddressFormPage() {
     }
     if (getIndianPincodeError(form.pincode)) {
       setPostalLookupStatus("idle");
-      setPostalOffices([]);
       return undefined;
     }
 
@@ -126,17 +124,13 @@ export default function AddressFormPage() {
           ? result.postOffices
           : [];
         if (!offices.length) {
-          setPostalOffices([]);
           setPostalLookupStatus("not-found");
           return;
         }
-        setPostalOffices(offices);
-        setSelectedPostalOffice(0);
         setPostalLookupStatus("success");
         applyPostalOffice(offices[0]);
       } catch (error) {
         if (!active || error.code === "ERR_CANCELED") return;
-        setPostalOffices([]);
         setPostalLookupStatus("error");
       }
     }, 350);
@@ -361,32 +355,6 @@ export default function AddressFormPage() {
                   No postal details found. Enter the location manually.
                 </span>
               )}
-            </label>
-            {postalOffices.length > 1 && (
-              <label>
-                Choose post office
-                <select
-                  value={selectedPostalOffice}
-                  onChange={(event) => {
-                    const index = Number(event.target.value);
-                    setSelectedPostalOffice(index);
-                    applyPostalOffice(postalOffices[index]);
-                  }}
-                >
-                  {postalOffices.map((office, index) => (
-                    <option
-                      key={`${office.name}-${office.pincode}-${index}`}
-                      value={index}
-                    >
-                      {office.name}{office.district ? ` - ${office.district}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <label>
-              Locality / post office
-              <input value={form.locality} onChange={field("locality")} />
             </label>
             <label className="check-label">
               <input
