@@ -1,4 +1,4 @@
-import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
+export const MAX_CART_ITEM_QUANTITY = 5;
 
 export function isUnavailableProduct(product) {
   return (

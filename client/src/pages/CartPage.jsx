@@ -8,7 +8,7 @@ import ProductImage from "../components/ProductImage";
 import QuantityStepper from "../components/QuantityStepper";
 import api, { getErrorMessage } from "../api/axios";
 import { syncCartCount } from "../utils/cart";
-import { MAX_CART_ITEM_QUANTITY } from "../constants/cart";
+import { MAX_CART_ITEM_QUANTITY } from "../utils/productAvailability";
 import {
   canOrderProduct,
   getMaximumOrderQuantity,

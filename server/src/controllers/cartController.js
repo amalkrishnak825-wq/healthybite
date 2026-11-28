@@ -2,10 +2,10 @@ import Cart from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import AppError from "../utils/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { MAX_CART_ITEM_QUANTITY } from "../constants/cart.js";
 import {
   findOrderableProduct,
   isOrderableProduct,
+  MAX_CART_ITEM_QUANTITY,
   requireId,
 } from "../utils/catalog.js";
 

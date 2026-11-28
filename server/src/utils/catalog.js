@@ -4,7 +4,7 @@ import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import AppError from "./AppError.js";
 import { escapeRegex } from "./query.js";
-import { MAX_CART_ITEM_QUANTITY } from "../constants/cart.js";
+export const MAX_CART_ITEM_QUANTITY = 5;
 
 const slugify = (value) =>
   value
