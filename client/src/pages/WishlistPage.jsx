@@ -72,7 +72,9 @@ export default function WishlistPage() {
     }
   }
   async function addAllToCart() {
-    const availableProducts = products.filter(canOrderProduct);
+    const availableProducts = products.filter((product) =>
+      canOrderProduct(product),
+    );
     if (!availableProducts.length) return;
 
     setBusy(true);
@@ -103,7 +105,9 @@ export default function WishlistPage() {
     setBusy(false);
   }
 
-  const availableProducts = products.filter(canOrderProduct);
+  const availableProducts = products.filter((product) =>
+    canOrderProduct(product),
+  );
   const availableTotal = availableProducts.reduce(
     (total, product) =>
       total + Number(product.price) * (quantities[product._id] || 1),
